@@ -29,26 +29,26 @@ Protocol. It adapts prior work (CPIM) to work well in the MLS context.
 
 {mainmatter}
 
-
-
 # Terminology
 The terms MLS client, MLS group, ...
 
 # Motivation
 
-MLS is a group key establishment protocol motivated by the desire for group
-chat with efficient end-to-end encryption. While one of the motivations of 
-MLS is interoperable standards-based secure messaging, the MLS protocol does
-not define or prescribe any format for the encrypted "application messages"
-encoded by MLS.  The development of MLS was strongly motivated by the needs
-of Instant Messaging (IM) systems. 
+MLS [@!I-D.ietf-mls-protocol] is a group key establishment protocol 
+motivated by the desire for group chat with efficient end-to-end encryption. 
+While one of the motivations of MLS is interoperable standards-based secure
+messaging, the MLS protocol does not define or prescribe any format for the
+encrypted "application messages" encoded by MLS.  The development of MLS 
+was strongly motivated by the needs of a number of Instant Messaging (IM) 
+systems, which encrypt messages end-to-end using variations of the 
+Double Ratchet protocol []. 
 
 End-to-end encrypted instant messaging was also a motivator for the Common
-Protocol for Instant Messaging (CPIM) [@RFC3862], however the model used at the time
+Protocol for Instant Messaging (CPIM) [@!RFC3862], however the model used at the time
 assumed standalone encryption of each message using a protocol such as S/MIME
-or PGP to interoperate between IM protocols such as SIMPLE and XMPP.  For a 
-variety of practical reasons, interoperable end-to-end encryption between IM
-systems was never deployed commercially.
+[@?RFC8551] or PGP [@?RFC3156] to interoperate between IM protocols such as
+SIP [@?RFC3261] and XMPP [@?RFC6120].  For a variety of practical reasons, interoperable
+end-to-end encryption between IM systems was never deployed commercially.
 
 There are now several vendors prepared to implement MLS. In order to enable
 interoperable messaging conveyed "inside" MLS application messages, some 
@@ -128,13 +128,16 @@ the epoch in which the message was sent.
 # Example
 ## Original Message
 
-In this example, Alice Smith sends a rich-text (Markdown) message to the Engineering
-Team MLS group. The following values are implied as if headers were present:
+In this example, Alice Smith sends a rich-text (Markdown) [@!RFC7763]
+message to the Engineering Team MLS group. The following values are
+implied as if headers were present:
 
 * Implied Sender header from MLS sender:
   <im:3b52249d-68f9-45ce-8bf5-c799f3cad7ec-0003@example.com>
 * Implied To header from MLS group: "Engineering Team" 
   <im:9dc867ca-3a01-4385-bb69-1573601c3c0c@example.com>
+
+
 ~~~~~~~
 Content-type: message/cpim
 
@@ -148,13 +151,12 @@ Hi everyone, we just shipped release 2.0. __Good work__!
 ~~~~~~~
 
 
-### Reply
+## Reply
 
-A reply message looks the similar, but contains an In-Reply-To CPIM header with
+A reply message looks similar, but contains an In-Reply-To CPIM header with
 the ID of the original message. The implied To header is the same all 
-example messages in this section. The implied sender from MLS is:
-
-* <im:3402b3091-5b5c-48c8-9806-5dcb899bf9d2-0006@example.com>
+example messages in this section. The implied Sender header is always the
+MLS sender, and will not be shown in subsequent example messages. 
 
 ~~~~~~~
 Content-type: message/cpim
@@ -166,10 +168,10 @@ In-Reply-To: <28fd19857ad7@example.com>
 
 Content-Type: text/markdown;charset=utf-8
 
-Right on! _Congratulations_ y'all!
+Right on! _Congratulations_ 'all!
 ~~~~~~~
 
-### Reaction 
+## Reaction 
 
 A reaction, uses the reaction Content-Disposition token defined in [@RFC9078]. 
 This Content-Disposition token indicates that the intended disposition of the
@@ -183,10 +185,6 @@ does not recognize could render the reaction as a reply, possibly prefixing
 with a localized string such as "Reaction: ".  Note that a reaction could
 theoretically even be another media type (ex: image, audio, or video), although
 not currently implemented in major instant messaging systems.
-
-The implied sender in this message is:
-
-* <im:f9a2309d-1a29-4c4b-bc19-74886af03ea1-0002@example.com>
 
 ~~~~~~~
 Content-type: message/cpim
@@ -202,208 +200,329 @@ Content-Disposition: reaction
 ♥
 ~~~~~~~
 
-### Mentions
+## Mentions
 
 In instant messaging systems and social media, a mention allows special
 formatting and behavior when a name, handle, or tag associated with a
-known group is encountered, often when prefixed with a commercial-at (@)
-character for mentions of users or a hash (#) character for groups or tags. 
+known group is encountered, often when prefixed with a commercial-at "@"
+character for mentions of users or a hash "#" character for groups or tags.
+A message which contains a mention may trigger distinct notifications on 
+the IM client. 
 
-
-
-Mention (via Markdown)
+We can convey a mention by linking the user, handle, or tag URI in Markdown
+or HTML rich content. For example, a mention using Markdown is indicated below.
 
 ~~~~~~~
 Content-type: message/cpim
 
-From: <wireapp:cathy-washington@example.com;type=handle>
-Sender: <wireapp:f9a2309d-1a29-4c4b-bc19-74886af03ea1-00000002@example.com;type=client>
-To: "Engineering Team" <wireapp:9dc867ca-3a01-4385-bb69-1573601c3c0c@example.com;type=conversation>
+From: <im:cathy-washington@example.com>
 DateTime: 2022-02-08T22:14:03-00:00
 Message-ID: <4dcab7711a77@example.com>
-In-Reply-To: <28fd19857ad7@example.com>
 
 Content-Type: text/markdown;charset=utf-8
 
 Kudos to [@Alice Smith](im:alice-smith@example.com)
-for making this happen!
+for making the release happen!
 ~~~~~~~
 
-Mention (via HTML)
+The same mention using HTML [@?W3C.CR-html52-20170808] is indicated below.
 
 ~~~~~~~
 Content-type: message/cpim
 
-From: <wireapp:cathy-washington@example.com;type=handle>
-Sender: <wireapp:f9a2309d-1a29-4c4b-bc19-74886af03ea1-00000002@example.com;type=client>
-To: "Engineering Team" <wireapp:9dc867ca-3a01-4385-bb69-1573601c3c0c@example.com;type=conversation>
+From: <im:cathy-washington@example.com>
 DateTime: 2022-02-08T22:14:03-00:00
 Message-ID: <4dcab7711a77@example.com>
-In-Reply-To: <28fd19857ad7@example.com>
 
 Content-Type: text/html;charset=utf-8
 
-<p>Kudos to <a href="wireapp:alice-smith@example.com;type=handle">@Alice
-Smith</a> for making this happen!</p>
+<p>Kudos to <a href="im:alice-smith@example.com">@Alice
+Smith</a> for making the release happen!</p>
 ~~~~~~~
 
-### Edit
+## Edit
 
-The Supersedes header is not often used, but it semantics are clear: the
-message included in the body is a replacement for the message with the 
-superseded message ID.
+Unlike with email messages, it is common in IM systems to allow the sender of
+a message to edit or delete the message after the fact. Typically the message
+is replaced in the user interface of the receivers (even after the original 
+message is read) but shows a visual indication that it has been edited. 
+
+We reuse the Supersedes header from MIXER [@!RFC2156], because the semantics
+are correct: the message included in the body is a replacement for the message
+with the superseded message ID.
+
+Here Bob Jones corrects a typo in his original message:
 
 ~~~~~~~
-Supersedes: <msgId>;action={replace|hide|delete}
+Content-type: message/cpim
+
+From: <im:bob-jones@example.com>
+DateTime: 2022-02-08T22:13:57-00:00
+Message-ID: <89d3472622a4@example.com>
+Supersedes: <e701beee59f9@example.com>
+
+Content-Type: text/markdown;charset=utf-8
+
+Right on! _Congratulations_ y'all!
 ~~~~~~~
 
-### Delete
+## Delete
 
-In IM systems a delete means that the author of a specific message has 
+In IM systems, a delete means that the author of a specific message has 
 retracted the message, regardless if other users have read the message
-or not. A delete uses the Supersedes header with an empty body
-~~~~~~~
-Supersedes: <msgId>;action={replace|hide|delete}
-~~~~~~~
+or not. Typically a placeholder remains in the user interface showing
+that a message was deleted. Replies which reference a deleted message
+typically hide the quoted portion and reflect that the original message
+was deleted.
 
-Expiring
-
-Expiring message are sent simply by including an Expires header in the CPIM message body.  
-~~~~~~~
-Expires: 
-~~~~~~~
-
-Knock
-
-A knock or ping is represented as a text/plan body containing a single CRLF
-with the Content-Disposition MIME header of alert
+If Bob deleted his message instead of modifying it, we would represent it
+using the Supersedes header with an empty body, as shown below.
 
 ~~~~~~~
+Content-type: message/cpim
+
+From: <im:bob-jones@example.com>
+DateTime: 2022-02-08T22:13:57-00:00
+Message-ID: <89d3472622a4@example.com>
+Supersedes: <e701beee59f9@example.com>
+
+Content-Length: 0
+~~~~~~~
+
+## Expiring
+
+Expiring messages are designed to be deleted automatically by the receiving
+client at a certain time whether they have been read or not.  As with manually
+deleted messages, there is no guarantee that a uncooperative client or a
+determined user will not save the content of the message, however most clients
+respect the convention.
+
+MIXER defines an Expires header which is also used
+ sent simply by including an Expires header in the CPIM message body.  
+ 
+To avoid using two different date header syntaxes, we define an 
+ExpiresDateTime header, which uses the same date/time format as 
+CPIM's DateTime header. The semantics of the header are that the message
+is automatically deleted by the receiving clients at the indicated time
+without user interaction or network connectivity necessary.
+
+~~~~~~~
+Content-type: message/cpim
+
+From: <im:alice-smith@example.com>
+DateTime: 2022-02-08T22:49:03-00:00
+Message-ID: <5c95a4dfddab@example.com>
+ExpiresDateTime: 2022-02-08T22:59:03-00:00
+
+Content-Type: text/markdown;charset=utf-8
+
+__*VPN GOING DOWN*__
+I'm rebooting the VPN in ten minutes unless anyone objects.
+~~~~~~~
+
+## Knock
+
+A knock or ping is message sent to get the attention of a user or a
+group of users.  It might be sent when a user has not responded to 
+direct messages or mentions, or in a group when something requires 
+the attention of everyone quickly (ex: a serious unusual situation
+like a major system outage). 
+
+We represent a knock as a text/plain body containing a single CRLF
+with the alert Content-Disposition token (defined in [@!RFC3261]).
+
+~~~~~~~
+Content-type: message/cpim
+
+From: <im:alice-smith@example.com>
+DateTime: 2022-02-08T22:13:45-00:00
+Message-ID: <c1a3375bfe3f@example.com>
+
+Content-Type: text/plain
 Content-Disposition: alert
+
+
 ~~~~~~~
 
 ## Read Receipt
 
-Existing methods of delivery notification and read receipts assume action
-by intermediary and feature many limitations. Often only a single
-notification is allowed per message.
+In instant messaging systems, read receipts typically generate a distinct
+indicator for each message. In some systems, the number of users in a group
+who have read the message is subtly displayed and the list of users who
+read the message is available on further inspection.
 
-The format below for message/im-disposition-notification has one 
-IM-Disposition line per message, with the disposition of the original 
-message in a parameter. 
+Of course, Internet mail has support for read receipts as well, but 
+the existing message disposition notification mechanism defined for email
+in [@?RFC8098] is unfortunately inappropriate in this context.
 
+* notifications can be sent by intermediaries
+* only one notification can be sent about a single message per recipient
+* a human-readable version of the notification is expected
+* each notification can refer to only one message
+* it is extremely verbose
 
+The proposed format below, message/immi-disposition-notification is sent
+by one member of an MLS group to the entire group and can refer to multiple messages. There
+is one IMMI-Disposition line per message, with the disposition of the original 
+message in a parameter. As the disposition at the recipient changes, it can be
+updated in a subsequent notification.
 
 ~~~~~~~
 Content-type: message/cpim
 
-From: <wireapp:bob-jonesh@example.com;type=handle>
-Sender: <wireapp:3402b3091-5b5c-48c8-9806-5dcb899bf9d2-00000006@example.com;type=client>
-To: "Engineering Team" <wireapp:9dc867ca-3a01-4385-bb69-1573601c3c0c@example.com;type=conversation>
-DateTime: 2022-02-08T22:13:57-00:00
-Message-ID: <1a294c4bbc19@example.com>
+From: <im:bob-jones@example.com>
+DateTime: 2022-02-09T07:57:13-00:00
+Message-ID: <7e924c2e6ee5@example.com>
 
-Content-type: message/im-disposition-notification
+Content-type: message/immi-disposition-notification
 
-IM-Disposition: <9dc867ca9857@example.com>;disposition=read
-IM-Disposition: <28fd19857ad7@example.com>;disposition=read|error|delivered|not-delivered|deleted|
-
+IMMI-Disposition: <4dcab7711a77@example.com>;dispo=read
+IMMI-Disposition: <285f75c46430@example.com>;dispo=read
+IMMI-Disposition: <c5e0cd6140e6@example.com>;dispo=read
+IMMI-Disposition: <5c95a4dfddab@example.com>;dispo=expired
 ~~~~~~~
 
 
-Hide
-~~~~~~~
-Supersedes: <msgId>;action={replace|hide|delete}
-~~~~~~~
 
-Assets
+
+
+## Attachments
 
 ~~~~~~~
 Content-Type: message/external-body; access-type="URL";
  URL="https://example.com/storage/bigfile.m4v";
- size=
+ size=708234961
 ~~~~~~~
 
 
-Call
+## Call
+
+Placing a call
+
 ~~~~~~~
 Content-Type: message/external-body; access-type="URL";
  URL="https://example.com/join/12345"
 Content-Disposition: session
 ~~~~~~~
 
-## Delivery notification
-MLS AppAck
-
 ~~~~~~~
-Content-type: message/cpim
+Content-Type: application/sdp
+Content-Disposition: session;role=offer
 
-From: <wireapp:bob-jonesh@example.com;type=handle>
-Sender: <wireapp:3402b3091-5b5c-48c8-9806-5dcb899bf9d2-00000006@example.com;type=client>
-To: "Engineering Team" <wireapp:9dc867ca-3a01-4385-bb69-1573601c3c0c@example.com;type=conversation>
-DateTime: 2022-02-08T22:13:57-00:00
-Message-ID: <1a294c4bbc19@example.com>
-
-Content-type: message/im-disposition-notification
-
-Final-Recipient: <wireapp:3402b3091-5b5c-48c8-9806-5dcb899bf9d2-00000006@example.com;type=client>
-Original-Message-ID: <28fd19857ad7@example.com>
-IM-Disposition: read
+...
 ~~~~~~~
 
-# CPIM profile
+# IMMI CPIM profile
+
+We define a profile of CPIM for instant messaging within MLS.
+The grammar uses Augmented Backus-Naur Form (BNF) [@!RFC5234].
+
+## CPIM headers
 
 
 
+[@?RFC5322]
+
+required
+From: the identity of message sender. for example im:rohan@example.com
+this identity could be pseudonymous or anonymous if the group policy allows
+DateTime:
+Message-ID:
+Content-type:
+In-Reply-To:
+Content-Disposition: 
+Content-Length  (only required for Knocks)
+
+required dispositions
+render
+reaction
+
+
+~~~~~~~
+msg-id-header-line = msg-id-header ":" SP msg-id CRLF
+msg-id-header = "Message-ID"   ; case-sensitive
+
+msg-id = "<" id-left "@" id-right ">"
+
+id-left  = dot-atom-text
+id-right = dot-atom-text / no-fold-literal
+
+dot-atom-text   =   1*atext *("." 1*atext)
+
+atext = ALPHA / DIGIT / atom-symbol  
+
+atom-symbol = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" /
+              "/" / "=" / "?" / "^" / "_" / "`" / "{" / "|" / "}" / "~"
+
+no-fold-literal = "[" *dtext "]"
+
+dtext = %d33-90 / %d94-126 ; Printable US-ASCII 
+                           ; excluding "[", "]", and "\"
+~~~~~~~
+
+
+
+## Definition of message/immi-disposition-notification
+
+~~~~~~~
+immi-disposition-notification-body = 1*immi-header-line
+
+immi-header-line = immi-header ":" SP msg-id ";" status CRLF
+
+imm-header = "IMMI-Disposition" ; case-sensitive
+
+status = "dispo" "=" status-value
+
+status-value = "read" / 
+               "error" /
+               "delivered" /
+               "expired" /
+               "deleted" /
+               "hidden"
+~~~~~~~
+
+## Required and Recommended MIME types
+
+The following MIME types are REQUIRED:
+
+* message/cpim
+* multipart/alternative
+* multipart/mixed
+* multipart/parallel
+* text/plain
+* text/markdown
+
+The following MIME types are RECOMMENDED:
+
+* text/html
+* message/external-body
+* message/immi-disposition-notification
+* image/jpeg
+* image/png
 
 
 # IANA Considerations
 
-This document proposes registration of two MLS Extension Types. 
+This document proposes registration of .
 
-## accepted_mime_types MLS Extension Type
-
-The accepted_mime_types MLS Extension Type is used inside KeyPackage objects. It
-contains a MimeTypeList representing all the MIME Types supported by the 
-MLS client publishing the KeyPackage.
-
-~~~~~~~~
-Template:
-Value: 0x0005
-Name: accepted_mime_types
-
-Message(s): This extension may appear in KeyPackage objects
-Recommended: Y
-Reference: RFC XXXX
-~~~~~~~~
-
-Description: list of MIME types supported by the MLS client advertising the KeyPackage
-
-
-## required_mime_types GroupContext extension
-
-The required_mime_types MLS Extension Type is used inside GroupContext objects. It
-contains a MimeTypeList representing the MIME Types which are mandatory for all
-MLS members of the group to support.
-
-~~~~~~~~
-Template:
-Value: 0x0006
-Name: required_mime_types
-
-Message(s): This extension may appear in GroupContext objects
-Recommended: Y
-Reference: RFC XXXX
-~~~~~~~~
-
-Description: list of MIME types which every member of the MLS group is 
-required to support.
+# Security Considerations 
 
 
 
 
-draft-mahy-dispatch-immi-content
-draft-mahy-dispatch-immi-mls-mime
+
+
+{backmatter}
+
+
+# Hide
+
+Some IM systems allow clients to hide a message. This could be sent in
+an MLS group containing only those
+
+~~~~~~~
+Supersedes: <msgId>;action={replace|hide|delete}
+~~~~~~~
 
 
 Inside MLS Message Interop (IMMI)
@@ -419,59 +538,7 @@ Sender: the MLS client
 
 
 
-message/cpim
-application/im-read-notifications
-message/vnd.wireapp-message
-
-application/json
-text/plain
-text/markdown
-text/xml
-text/html
-image/jpeg
-image/png
-image/gif
-audio/
-audio/
-video/mp4
-video/vp8
-
-
-
-required
-From: the identity of message sender. for example im:rohan@example.com
-this identity could be pseudonymous or anonymous if the group policy allows
-DateTime:
-Message-ID:
-Content-type:
-
-recommended
-In-Reply-To:
-Content-Disposition:
-
-required MIME types
-message/cpim
-multipart/alternative
-multipart/mixed
-multipart/parallel
-text/plain
-
-recommended
-text/markdown
-text/html
-message/im-disposition-notification
-image/jpeg
-image/png
-
-IM-Disposition: <28fd19857ad7@example.com>;disposition=read
-
-
-
-
-
 as discussed in [mls-federation]
-
-
 
 
 Problem Discussion
@@ -479,10 +546,5 @@ Problem Discussion
 Using MLS to negotiate "inner" MIME type
 
 Naming conventions and scoping
-
-{backmatter}
-
-
-
 
 
