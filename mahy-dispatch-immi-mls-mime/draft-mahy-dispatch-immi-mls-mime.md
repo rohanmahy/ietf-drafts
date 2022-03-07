@@ -23,75 +23,79 @@ organization = "Wire"
 
 .# Abstract
 
-This document defines two new extensions to the MLS (Message Layer Security) Protocol 
+This document defines two new extensions to the MLS (Messaging Layer Security) Protocol
 to allow for negotiation of MIME types exchanged among members of an MLS group.
 
 {mainmatter}
 
 # Terminology
-The terms MLS client, MLS group, ...
+The terms MLS client, MLS group, and KeyPackage have the same meanings as in
+the MLS protocol [@!I-D.ietf-mls-protocol].
 
 # Motivation
 
-MLS [MLS] is a group key establishment protocol motivated by the desire for group
-chat with efficient end-to-end encryption. While one of the motivations of 
-MLS is interoperable standards-based secure messaging, the MLS protocol does
-not define or prescribe any format for the encrypted "application messages"
-encoded by MLS. This document describes two extensions to MLS which allow 
-MLS clients to advertise their supported MIME types, and to specify which
-MIME types are required for a particular MLS group. These allow clients to
-discover MLS groups with an interoperable and extensible set of content
-types.
+MLS is a group key establishment protocol motivated
+by the desire for group chat with efficient end-to-end encryption. While one
+of the motivations of MLS is interoperable standards-based secure messaging,
+the MLS protocol does not define or prescribe any format for the encrypted
+"application messages" encoded by MLS. This document describes two extensions
+to MLS which allow MLS clients to advertise their supported MIME types, and
+to specify which MIME types are required for a particular MLS group. These
+allow clients to discover MLS groups with an interoperable and extensible set
+of content types.
 
-A companion document describes a specific profile for interoperable instant
-messaging body types.
+A companion document [@?I-D.mahy-dispatch-immi-content] describes a specific
+profile for interoperable instant messaging body types.
 
 
 # Extension Description
 
-MimeType is the ASCII string encoded as a TLS vector type containing a 
-single MIME type and any of its parameters.
+This document specifies two MLS extensions of type MimeTypeList:
+`accepted_mime_types`, and `required_mime_types`.
 
-~~~~~~~~
-image/png
-text/plain;charset="UTF-8"
-~~~~~~~~
+MimeType is the ASCII string encoded as a TLS vector type containing a
+single MIME type and any of its parameters.
 
 MimeTypeList is an ordered list of MimeType objects.
 
 ~~~~~~~~
+// Text string representation of a single IANA registered MIME Type.
+MimeType mime_type<V>
+
 struct {
     MimeType mime_types<V>
 } MimeTypeList
 
 ~~~~~~~~
 
+Example MIME Types:
+~~~~~~~~
+image/png
+text/plain;charset="UTF-8"
+~~~~~~~~
 
-## Group creation
+An MLS client which implements this specification SHOULD include the
+`accepted_mime_types` extensions in its KeyPackages, listing
+all the MIME types it can receive.
 
-Add the extension to the list of extensions in RequiredCapabilities. 
+When creating a new MLS group, the group MAY include a `required_mime_type`
+extension in the group Extensions.  When used in a group, the client
+MUST include the `required_mime_types` extension in the list of extensions
+in RequiredCapabilities.
 
-
-MLS clients MUST NOT add to an MLS client to an MLS group
-
-An MLS group which contains
-
-
-
-SHOULD NOT include in a Proposal 
-SHOULD NOT Commit 
-
-MUST NOT join 
-
+MLS clients SHOULD NOT add an MLS client to an MLS group with `required_mime_types`
+unless the MLS client advertises it can support all of the required MIME
+Types. As an exception, a client could be preconfigured to know that
+certain clients support the mandatory types.
 
 # IANA Considerations
 
-This document proposes registration of two MLS Extension Types. 
+This document proposes registration of two MLS Extension Types.
 
 ## accepted_mime_types MLS Extension Type
 
 The accepted_mime_types MLS Extension Type is used inside KeyPackage objects. It
-contains a MimeTypeList representing all the MIME Types supported by the 
+contains a MimeTypeList representing all the MIME Types supported by the
 MLS client publishing the KeyPackage.
 
 ~~~~~~~~
@@ -123,10 +127,23 @@ Recommended: Y
 Reference: RFC XXXX
 ~~~~~~~~
 
-Description: list of MIME types which every member of the MLS group is 
+Description: list of MIME types which every member of the MLS group is
 required to support.
 
 # Security Considerations
+
+The Security Considerations of MLS apply.
+
+Use of the extensions in this document
+could leak some private information both in KeyPackages and inside an MLS group.
+They
+could be used to infer a specific implementation, platform, or even version.
+Clients should consider carefully if making a list of acceptable MIME types
+
+A client which can take over group administration could prevent members from
+joining or in an established group, but requiring a list of required MIME
+types which the attacker knows is unsupported. This attack is not especially
+helpful, as taking over group administration can have more disruptive effects.
 
 {backmatter}
 
