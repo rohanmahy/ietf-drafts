@@ -85,7 +85,6 @@ Below is a list of some features commonly found in IM group chat systems:
 * edit or delete previously sent messages
 * expiring messages
 * knock / ping
-* hide messages
 * shared files/audio/videos
 * calling / conferencing
 
@@ -436,6 +435,9 @@ IMMI-Disposition: <5c95a4dfddab@example.com>;dispo=expired
 
 ## Attachments
 
+The message/external-body MIME Type is a convenient way to present a
+URL to download an attachment which should not be rendered inline.
+
 ~~~~~~~
 Content-Type: message/external-body; access-type="URL";
  URL="https://example.com/storage/bigfile.m4v";
@@ -443,22 +445,19 @@ Content-Type: message/external-body; access-type="URL";
 ~~~~~~~
 
 
-## Call
+## Conferencing
 
-Placing a call
+Joining a conference via URL is also possible. The link could be
+rendered to the user, requiring a click. Alternatively another
+Content-Disposition could be specified to more automatic actions.
+However further calling and conferencing functionality is out-of-scope
+of this document.
 
 ~~~~~~~
 Content-Type: message/external-body; access-type="URL";
  URL="https://example.com/join/12345"
-Content-Disposition: session
 ~~~~~~~
 
-~~~~~~~
-Content-Type: application/sdp
-Content-Disposition: session;role=offer
-
-...
-~~~~~~~
 
 # IMMI CPIM profile
 
@@ -561,17 +560,15 @@ The following MIME types are RECOMMENDED:
 
 ## MIME subtype registration of message/immi-disposition-notification
 
-This document proposes registration of .
+This document proposes registration of a MIME subtype with IANA.
 
-## 
-
-
+~~~~~~~
+TBC
+~~~~~~~
 
 # Security Considerations
 
 TBC
-
-
 
 
 {backmatter}
@@ -588,37 +585,5 @@ TBC
    <format type="TXT" target="https://www.ietf.org/archive/id/draft-mahy-dispatch-immi-mls-mime-00.txt" />
 </reference>
 
-
-# Hide
-
-Some IM systems allow clients to hide a message. This could be sent in
-an MLS group containing only those
-
-~~~~~~~
-Supersedes: <msgId>;action={replace|hide|delete}
-~~~~~~~
-
-
-Inside MLS Message Interop (IMMI)
-
-draft-mahy-dispatch-immi-extensions
-draft-mahy-dispatch-immi-im-profile
-
-
-profile of CPIM with the following fields:
-implied from MLS message
-To: the MLS group
-Sender: the MLS client
-
-
-
-as discussed in [mls-federation]
-
-
-Problem Discussion
-
-Using MLS to negotiate "inner" MIME type
-
-Naming conventions and scoping
 
 
