@@ -85,25 +85,51 @@ Below is a list of some features commonly found in IM group chat systems:
 
 # Overview
 
-This proposal relies on
+## Naming schemes
 
-URIs for naming and identifiers
+IM systems have a number of types of identifiers. Not all systems use
+every type: 
 
-Types of identifiers
-group chat conversation identifier
-handle identifier
-user identifier
-MLS client identifier
+* client/device identifier (internal representation)
+* user identifier 
+* handle identifier (external, friendly representation)
+* group conversation identifier
+* group or or channel name (external, friendly representation)
+* team identifier (less common)
 
-One user may have multiple clients (for example a mobile and a desktop client)
+One user may have multiple clients (for example a mobile and a desktop client).
+A handle may refer to a single user or it may redirect to multiple users. 
+In some systems, the user identifier is a handle. In other systems the user
+identifier is an internal representation, for example a UUID. Handles may be
+changed/renamed, but hopefully internal user identifiers do not.
+Unqualified handles are often prefixed with a commercial at-sign ("@").
 
-Negotiation of MIME types
+Likewise, group conversation identifiers could be internal or external
+representations, whereas group names or channel names are often external
+friendly representations.  Unqualified channel names are often prefixed
+with a hash character ("#"). Some systems have an additional level of hierarchy
+with a team identifier under which groups/channels can be organized and
+authorized.
 
+This proposal relies on URIs for naming and identifiers. All the example use
+the `im:` URI scheme (defined in [@!RFC3862]), but any instant messaging scheme
+is acceptable.
 
-Specific Message headers
+## Negotiation of MIME types
 
-Specific usage of MIME header
+As most IM systems are proprietary, standalone systems, if is useful to allow
+clients to send and receive proprietary formats among themselves. Using the 
+multipart/alternative MIME wrapper, clients can send a message using the basic 
+functionality described in this document AND a proprietary format for
+same-vendor clients simultaneously over the same group with end-to-end
+encryption.
 
+A companion Internet Draft contains the actual MLS extensions useful for negotiating
+MIME types. The profile in this document requires support for receiving message/cpim, 
+text/plain, text/markdown, and multipart MIME. All other mime types (including
+some recommended in this profile) are optional.
+
+## CPIM and MIME headers
 
 We assume that an MLS group is already established and that either out-of-band
 or using the MLS protocol or MLS extensions that the following is known to every
@@ -116,13 +142,20 @@ member of the group:
 * Which MIME types are mandatory to implement (proposed extension).
 * For each member, the MIME types each supports (proposed extension).
 
-For all messages the message header equivalent of To and Sender fields is already
+For all messages the message header equivalent of To (the MLS group) and
+Sender fields (MLS sender) is already
 known and is therefore redundant. Every message contains a message/cpim header which 
-includes the From, DateTime, and Message-ID fields.
+includes the From, DateTime, and Message-ID fields. The From field contains the
+external, user-friendly representation of the Sender.
 
-Messages send to an MLS group are delivered to every member of the group active during
+Messages sent to an MLS group are delivered to every member of the group active during
 the epoch in which the message was sent.
 
+It is also mandatory to understand are the following MIME headers:
+
+* Content-Type
+* Content-Disposition
+* Content-Length
 
  
 # Example
@@ -364,8 +397,8 @@ in [@?RFC8098] is unfortunately inappropriate in this context.
 The proposed format below, message/immi-disposition-notification is sent
 by one member of an MLS group to the entire group and can refer to multiple messages. There
 is one IMMI-Disposition line per message, with the disposition of the original 
-message in a parameter. As the disposition at the recipient changes, it can be
-updated in a subsequent notification.
+message in a parameter. As the disposition at the recipient changes, the disposition
+can be updated in a subsequent notification.
 
 ~~~~~~~
 Content-type: message/cpim
@@ -374,6 +407,7 @@ From: <im:bob-jones@example.com>
 DateTime: 2022-02-09T07:57:13-00:00
 Message-ID: <7e924c2e6ee5@example.com>
 
+Content-Disposition: notification
 Content-type: message/immi-disposition-notification
 
 IMMI-Disposition: <4dcab7711a77@example.com>;dispo=read
@@ -381,9 +415,6 @@ IMMI-Disposition: <285f75c46430@example.com>;dispo=read
 IMMI-Disposition: <c5e0cd6140e6@example.com>;dispo=read
 IMMI-Disposition: <5c95a4dfddab@example.com>;dispo=expired
 ~~~~~~~
-
-
-
 
 
 ## Attachments
@@ -419,28 +450,34 @@ The grammar uses Augmented Backus-Naur Form (BNF) [@!RFC5234].
 
 ## CPIM headers
 
+The following CPIM headers are required:
 
+* From: the identity of message sender. for example im:alice@example.com
+  this identity could be pseudonymous or anonymous if the group policy allows.
+* DateTime: the date and time in a reasonable format, as specified in CPIM.
+* Message-ID: a message ID which is unique across domains.
+* Content-type: As is from CPIM.
+* In-Reply-To: Refers to the previous Message-ID. Same semantics as in
+ [@?RFC5322].
+* Supersedes: Refers to the previous Messsage-ID. Similar semantics to
+  header of the same name in MIXER.  
+  Content-Disposition:  The intended handling of the message. The two required
+  dispositions are render and reaction.
+* Content-Length:
 
-[@?RFC5322]
-
-required
-From: the identity of message sender. for example im:rohan@example.com
-this identity could be pseudonymous or anonymous if the group policy allows
-DateTime:
-Message-ID:
-Content-type:
-In-Reply-To:
-Content-Disposition: 
-Content-Length  (only required for Knocks)
-
-required dispositions
-render
-reaction
-
+For clarity the grammar for the headers not already included in CPIM are 
+formulated below.
 
 ~~~~~~~
 msg-id-header-line = msg-id-header ":" SP msg-id CRLF
 msg-id-header = "Message-ID"   ; case-sensitive
+
+in-reply-to-header-line = in-reply-to-header ":" SP msg-id CRLF
+in-reply-to-header = "In-Reply-To"   ; case-sensitive
+
+supersedes-header-line = supersedes-header ":" SP msg-id CRLF
+supersedes-header = "Supersedes"   ; case-sensitive
+
 
 msg-id = "<" id-left "@" id-right ">"
 
@@ -463,6 +500,8 @@ dtext = %d33-90 / %d94-126 ; Printable US-ASCII
 
 
 ## Definition of message/immi-disposition-notification
+
+The grammar below defines the syntax.
 
 ~~~~~~~
 immi-disposition-notification-body = 1*immi-header-line
