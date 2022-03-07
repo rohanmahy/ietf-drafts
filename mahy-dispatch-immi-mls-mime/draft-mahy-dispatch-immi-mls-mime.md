@@ -138,15 +138,28 @@ Use of the extensions in this document
 could leak some private information both in KeyPackages and inside an MLS group.
 They
 could be used to infer a specific implementation, platform, or even version.
-Clients should consider carefully if making a list of acceptable MIME types
+Clients should consider carefully the implications in their environment of
+making a list of acceptable MIME types available.
 
 A client which can take over group administration could prevent members from
-joining or in an established group, but requiring a list of required MIME
-types which the attacker knows is unsupported. This attack is not especially
-helpful, as taking over group administration can have more disruptive effects.
+joining or sending messages in an established group, by requiring a list of
+required MIME types which the attacker knows is unsupported. This attack is
+not especially helpful, as taking over group administration can have more
+disruptive effects.
 
 {backmatter}
 
+<reference anchor="I-D.mahy-dispatch-immi-content">
+   <front>
+      <title>Inside MLS Message Interop (IMMI) instant message content</title>
+      <author fullname="Rohan Mahy">
+	 <organization>Wire</organization>
+      </author>
+      <date month="March" day="7" year="2022" />
+   </front>
+   <seriesInfo name="Internet-Draft" value="draft-mahy-dispatch-immi-content-00" />
+   <format type="TXT" target="https://www.ietf.org/archive/id/draft-mahy-dispatch-immi-content-00.txt" />
+</reference>
 
 
 
