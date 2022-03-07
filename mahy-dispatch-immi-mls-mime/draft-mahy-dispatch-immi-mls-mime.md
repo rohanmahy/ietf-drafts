@@ -9,7 +9,7 @@ keyword = ["mls","mime"]
 [seriesInfo]
 status = "informational"
 name = "Internet-Draft"
-value = "draft-mahy-dispatch-immi-mls-mime"
+value = "draft-mahy-dispatch-immi-mls-mime-00"
 stream = "IETF"
 
 [[author]]
@@ -29,10 +29,14 @@ to allow for negotiation of MIME types exchanged among members of an MLS group.
 {mainmatter}
 
 # Terminology
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", 
+"SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to 
+be interpreted as described in RFC 2119 [@!RFC2219].
+
 The terms MLS client, MLS group, and KeyPackage have the same meanings as in
 the MLS protocol [@!I-D.ietf-mls-protocol].
 
-# Motivation
+# Introduction
 
 MLS is a group key establishment protocol motivated
 by the desire for group chat with efficient end-to-end encryption. While one
