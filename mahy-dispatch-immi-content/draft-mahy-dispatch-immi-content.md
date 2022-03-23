@@ -135,14 +135,24 @@ text/plain, text/markdown, and multipart MIME. All other mime types (including
 some recommended in this profile) are optional.
 
 Example sending this profile and proprietary messaging protocol simultaneously.
-
 ~~~~~~~
-Content-type: multipart/alternative
+Content-type: multipart/alternative; boundary=XcrSXMwuRwk9
 
+--XcrSXMwuRwk9
+Content-type: message/cpim
 
+From: <im:alice-smith@example.com>
+DateTime: 2022-02-08T22:13:45-00:00
+Message-ID: <28fd19857ad7@example.com>
 
+Content-Type: text/plain; charset=utf-8
 
+Test Message
+--XcrSXMwuRwk9
+Content-type: application/vnd.examplevendor-fancy-im-message
 
+<content of example vendor's fancy proprietary format>
+--XcrSXMwuRwk9
 ~~~~~~~
 
 ## CPIM and MIME headers
