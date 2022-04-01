@@ -3,7 +3,7 @@ title = "Content Negotiation for Message Layer Security (MLS)"
 abbrev = "MLS Content Negotiation"
 ipr= "trust200902"
 area = "sec"
-workgroup = "mls"
+workgroup = "MLS"
 keyword = ["mls","content","negotiation","media type","mime"]
 
 [seriesInfo]
@@ -56,7 +56,7 @@ Extension lists the formats a client
 supports inside `application_data`, while the `required_media_types`
 GroupContext Extension specifies which media types are required for a particular
 MLS group. These allow clients to confirm that all members of a group can communicate.
-Finally, this documents defines a minimal framing format so MLS clients can signal
+Finally, this document defines a minimal framing format so MLS clients can signal
 which media type is being sent when multiple formats are permitted in the same group.
 As clients are upgraded to support new formats they can use these extensions
 to detect when all members support a new or more efficient encoding, or select the
@@ -82,15 +82,15 @@ The formal internal structure is defined later in this section.
 MediaTypeList is an ordered list of MediaType objects.
 
 ~~~ tls
-// Text string representation of a single IANA-registered Media Type.
-MediaType media_type<V>;
-
-struct {
-    MediaType media_types<V>;
-} MediaTypeList;
-
-MediaTypeList accepted_media_types;
-MediaTypeList required_media_types;
+  // Text representation of a single IANA-registered Media Type.
+  MediaType media_type<V>;
+  
+  struct {
+      MediaType media_types<V>;
+  } MediaTypeList;
+  
+  MediaTypeList accepted_media_types;
+  MediaTypeList required_media_types;
 ~~~
 
 The internal format of the MediaType is described in the Augmented Backus-Naur
@@ -100,16 +100,16 @@ definition in [@!RFC2045] Section 5.1.  Whitespace inside an MLS MediaType is PR
 The type, subtype, and parameter attribute names are all case-insensitive.
 
 ~~~ abnf
-MediaType := type "/" subtype *(";" parameter)
+  MediaType := type "/" subtype *(";" parameter)
 ~~~
 
 
 Example Media Types:
 ~~~ artwork
-image/png
-text/plain;charset="UTF-8"
-application/json
-application/vnd.example.msgbus+cbor
+  image/png
+  text/plain;charset="UTF-8"
+  application/json
+  application/vnd.example.msgbus+cbor
 ~~~
 
 An MLS client which implements this specification SHOULD include the
@@ -135,10 +135,10 @@ the `application_data` sent in that group is interpreted as `ApplicationFraming`
 as defined below:
 
 ~~~ tls
-struct {
-    MediaType media_type;
-    opaque<V> application_content;
-} ApplicationFraming;
+  struct {
+      MediaType media_type;
+      opaque<V> application_content;
+  } ApplicationFraming;
 ~~~
 
 The `media_type` MAY be zero length, in which case, the Media type of the
@@ -156,13 +156,13 @@ contains a mediaTypeList representing all the media Types supported by the
 MLS client publishing the KeyPackage.
 
 ~~~~~~~~
-Template:
-Value: 0x0005
-Name: accepted_media_types
-
-Message(s): This extension may appear in KeyPackage objects
-Recommended: Y
-Reference: RFC XXXX
+  Template:
+  Value: 0x0005
+  Name: accepted_media_types
+  
+  Message(s): This extension may appear in KeyPackage objects
+  Recommended: Y
+  Reference: RFC XXXX
 ~~~~~~~~
 
 Description: list of media types supported by the MLS client advertising the KeyPackage
@@ -175,13 +175,13 @@ contains a mediaTypeList representing the media Types which are mandatory for al
 MLS members of the group to support.
 
 ~~~~~~~~
-Template:
-Value: 0x0006
-Name: required_media_types
-
-Message(s): This extension may appear in GroupContext objects
-Recommended: Y
-Reference: RFC XXXX
+  Template:
+  Value: 0x0006
+  Name: required_media_types
+  
+  Message(s): This extension may appear in GroupContext objects
+  Recommended: Y
+  Reference: RFC XXXX
 ~~~~~~~~
 
 Description: list of media types which every member of the MLS group is

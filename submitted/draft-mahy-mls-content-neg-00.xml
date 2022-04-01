@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
+<rfc version="3" ipr="trust200902" docName="draft-mahy-mls-content-neg-00" submissionType="IETF" category="info" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" consensus="true">
+
+<front>
+<title abbrev="MLS Content Negotiation">Content Negotiation for Message Layer Security (MLS)</title><seriesInfo value="draft-mahy-mls-content-neg-00" stream="IETF" status="informational" name="Internet-Draft"></seriesInfo>
+<author initials="R." surname="Mahy" fullname="Rohan Mahy"><organization>Wire</organization><address><postal><street></street>
+</postal><email>rohan.mahy@wire.com</email>
+</address></author><date/>
+<area>sec</area>
+<workgroup>MLS</workgroup>
+<keyword>mls</keyword>
+<keyword>content</keyword>
+<keyword>negotiation</keyword>
+<keyword>media type</keyword>
+<keyword>mime</keyword>
+
+<abstract>
+<t>This document describes a default mechanism for the negotiation of content inside
+an MLS group. It defines two new extensions to the MLS (Messaging Layer Security)
+Protocol to allow for negotiation of media types exchanged among members of an
+MLS group, and a minimal framing format.</t>
+</abstract>
+
+</front>
+
+<middle>
+
+<section anchor="terminology"><name>Terminology</name>
+<t>The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL NOT&quot;, &quot;SHOULD&quot;,
+&quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;, &quot;MAY&quot;, and &quot;OPTIONAL&quot; in this document are to
+be interpreted as described in RFC 2119 <xref target="RFC2219"></xref>.</t>
+<t>The terms MLS client, MLS group, and KeyPackage have the same meanings as in
+the MLS protocol <xref target="I-D.ietf-mls-protocol"></xref>.</t>
+</section>
+
+<section anchor="introduction"><name>Introduction</name>
+<t>MLS is a group key establishment protocol which has several applications.
+As described in the MLS architecture document <xref target="I-D.ietf-mls-architecture"></xref>,
+applications need to define specific behavior of the MLS Distribution Service,
+the MLS Authentication Service, and the format and negotiation of application data.
+This document describes a default content negotiation mechanism recommended by the
+MLS architecture specification. (The MLS protocol specification does not define or
+prescribe any format for the encrypted <tt>application_data</tt> encoded by MLS.)</t>
+<t>This document describes two extensions
+to MLS which allow MLS clients to advertise their support for specific formats inside
+MLS <tt>application_data</tt>. These are expressed using the extensive IANA Media Types
+registry (formerly called MIME Types).  The <tt>accepted_media_types</tt> KeyPackage
+Extension lists the formats a client
+supports inside <tt>application_data</tt>, while the <tt>required_media_types</tt>
+GroupContext Extension specifies which media types are required for a particular
+MLS group. These allow clients to confirm that all members of a group can communicate.
+Finally, this document defines a minimal framing format so MLS clients can signal
+which media type is being sent when multiple formats are permitted in the same group.
+As clients are upgraded to support new formats they can use these extensions
+to detect when all members support a new or more efficient encoding, or select the
+best format or formats to send.</t>
+<t>Note that the usage of IANA media types in general does not imply the usage of MIME
+Headers <xref target="RFC2045"></xref> for framing. Vendor-specific media subtypes starting with
+<tt>vnd.</tt> can be registered with IANA without standards action as described in
+<xref target="RFC6838"></xref>.  Implementations which wish to send multiple formats in a single
+application message, may be interested in the <tt>multipart/alternative</tt> media type
+defined in <xref target="RFC2046"></xref> or may use or define another type with similar semantics.</t>
+</section>
+
+<section anchor="extension-description"><name>Extension Description</name>
+<t>This document specifies two MLS extensions of type MediaTypeList:
+<tt>accepted_media_types</tt>, and <tt>required_media_types</tt>.  The syntax is described using
+the TLS Presentation Language <xref target="RFC8446"></xref>.</t>
+<t>MediaType is an ASCII string encoded as a TLS vector type containing a single IANA
+Media Type (including the top-level type and subtype) and any of its parameters.
+The formal internal structure is defined later in this section.
+MediaTypeList is an ordered list of MediaType objects.</t>
+
+<sourcecode type="tls">  // Text representation of a single IANA-registered Media Type.
+  MediaType media_type&lt;V&gt;;
+  
+  struct {
+      MediaType media_types&lt;V&gt;;
+  } MediaTypeList;
+  
+  MediaTypeList accepted_media_types;
+  MediaTypeList required_media_types;
+</sourcecode>
+<t>The internal format of the MediaType is described in the Augmented Backus-Naur
+Form (ABNF) <xref target="RFC5234"></xref> grammar below. The <tt>type</tt> is the IANA top-level media type
+(ex: application), <tt>subtype</tt> is the IANA media subtype, and <tt>parameter</tt> follows the
+definition in <xref target="RFC2045"></xref> Section 5.1.  Whitespace inside an MLS MediaType is PROHIBITED.
+The type, subtype, and parameter attribute names are all case-insensitive.</t>
+
+<sourcecode type="abnf">  MediaType := type &quot;/&quot; subtype *(&quot;;&quot; parameter)
+</sourcecode>
+<t>Example Media Types:</t>
+
+<sourcecode type="artwork">  image/png
+  text/plain;charset=&quot;UTF-8&quot;
+  application/json
+  application/vnd.example.msgbus+cbor
+</sourcecode>
+<t>An MLS client which implements this specification SHOULD include the
+<tt>accepted_media_types</tt> extension in its KeyPackages, listing
+all the media types it can receive.</t>
+<t>When creating a new MLS group for an application using this specification,
+the group includes a <tt>required_media_type</tt>
+extension in the GroupInfo Extensions.  When used in a group, the client
+MUST include the <tt>required_media_types</tt> extension in the list of extensions
+in RequiredCapabilities.</t>
+<t>MLS clients SHOULD NOT add an MLS client to an MLS group with <tt>required_media_types</tt>
+unless the MLS client advertises it can support all of the required Media
+Types. As an exception, a client could be preconfigured to know that
+certain clients support the mandatory types.</t>
+</section>
+
+<section anchor="framing-of-application-data"><name>Framing of application_data</name>
+<t>When an MLS group contains the <tt>required_media_types</tt> GroupContext extension,
+the <tt>application_data</tt> sent in that group is interpreted as <tt>ApplicationFraming</tt>
+as defined below:</t>
+
+<sourcecode type="tls">  struct {
+      MediaType media_type;
+      opaque&lt;V&gt; application_content;
+  } ApplicationFraming;
+</sourcecode>
+<t>The <tt>media_type</tt> MAY be zero length, in which case, the Media type of the
+<tt>application_content</tt> is the first MediaType specified in <tt>required_media_types</tt>.</t>
+</section>
+
+<section anchor="iana-considerations"><name>IANA Considerations</name>
+<t>This document proposes registration of two MLS Extension Types.</t>
+
+<section anchor="accepted-media-types-mls-extension-type"><name>accepted_media_types MLS Extension Type</name>
+<t>The <tt>accepted_media_types</tt> MLS Extension Type is used inside KeyPackage objects. It
+contains a mediaTypeList representing all the media Types supported by the
+MLS client publishing the KeyPackage.</t>
+
+<artwork>  Template:
+  Value: 0x0005
+  Name: accepted_media_types
+  
+  Message(s): This extension may appear in KeyPackage objects
+  Recommended: Y
+  Reference: RFC XXXX
+</artwork>
+<t>Description: list of media types supported by the MLS client advertising the KeyPackage</t>
+</section>
+
+<section anchor="required-media-types-groupcontext-extension"><name>required_media_types GroupContext extension</name>
+<t>The required_media_types MLS Extension Type is used inside GroupContext objects. It
+contains a mediaTypeList representing the media Types which are mandatory for all
+MLS members of the group to support.</t>
+
+<artwork>  Template:
+  Value: 0x0006
+  Name: required_media_types
+  
+  Message(s): This extension may appear in GroupContext objects
+  Recommended: Y
+  Reference: RFC XXXX
+</artwork>
+<t>Description: list of media types which every member of the MLS group is
+required to support.</t>
+</section>
+</section>
+
+<section anchor="security-considerations"><name>Security Considerations</name>
+<t>The Security Considerations of MLS apply.</t>
+<t>Use of the extensions in this document
+could leak some private information both in KeyPackages and inside an MLS group.
+They could be used to infer a specific implementation, platform, or even version.
+Clients should consider carefully the implications in their environment of
+making a list of acceptable media types available.</t>
+<t>A client which can take over group administration could prevent members from
+joining or sending messages in an established group, by requiring a list of
+required media types which the attacker knows is unsupported. This attack is
+not especially helpful, as taking over group administration can have more
+disruptive effects.</t>
+</section>
+
+</middle>
+
+<back>
+<references><name>Normative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.ietf-mls-architecture.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.ietf-mls-protocol.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2045.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2219.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5234.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8446.xml"/>
+</references>
+<references><name>Informative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2046.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6838.xml"/>
+</references>
+
+</back>
+
+</rfc>
