@@ -96,7 +96,7 @@ MediaTypeList required_media_types;
 The internal format of the MediaType is described in the Augmented Backus-Naur
 Form (ABNF) [@!RFC5234] grammar below. The `type` is the IANA top-level media type
 (ex: application), `subtype` is the IANA media subtype, and `parameter` follows the
-definition in [@!RFC2045] Section 5.1.  Whitespace inside a MediaType is PROHIBITED.
+definition in [@!RFC2045] Section 5.1.  Whitespace inside an MLS MediaType is PROHIBITED.
 The type, subtype, and parameter attribute names are all case-insensitive.
 
 ~~~ abnf
