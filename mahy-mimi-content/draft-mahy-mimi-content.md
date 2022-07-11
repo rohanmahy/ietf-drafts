@@ -1,15 +1,15 @@
 %%%
-title = "Inside MLS Message Interop (IMMI) instant message content"
-abbrev = "Inside MLS IM content"
+title = "More Instant Messaging Interoperability (MIMI) message content"
+abbrev = "MIMI Content"
 ipr= "trust200902"
 area = "art"
-workgroup = "dispatch"
-keyword = ["mls","mime"]
+workgroup = "MIMI BoF"
+keyword = ["mimi","content","mls","mime"]
 
 [seriesInfo]
 status = "informational"
 name = "Internet-Draft"
-value = "draft-mahy-dispatch-immi-content-00"
+value = "draft-mahy-mimi-content-00"
 stream = "IETF"
 
 [[author]]
