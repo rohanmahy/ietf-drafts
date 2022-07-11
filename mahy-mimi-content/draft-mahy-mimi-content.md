@@ -23,8 +23,11 @@ organization = "Wire"
 
 .# Abstract
 
-This document defines a profile intended for instant messaging interoperability
-of messages end-to-end encrypted inside the MLS (Message Layer Security)
+This document describes content semantics common in Instant Messaging (IM)
+systems and describes an example 
+profile suitable for instant messaging interoperability
+of messages end-to-end encrypted inside the MLS 
+(Message Layer Security)
 Protocol. It adapts prior work (CPIM) to work well in the MLS context.
 
 {mainmatter}
@@ -46,7 +49,7 @@ messaging, the MLS protocol does not define or prescribe any format for the
 encrypted "application messages" encoded by MLS.  The development of MLS
 was strongly motivated by the needs of a number of Instant Messaging (IM)
 systems, which encrypt messages end-to-end using variations of the
-Double Ratchet protocol [].
+Double Ratchet protocol [@?DoubleRatchet].
 
 End-to-end encrypted instant messaging was also a motivator for the Common
 Protocol for Instant Messaging (CPIM) [@!RFC3862], however the model used at the time
@@ -55,20 +58,25 @@ assumed standalone encryption of each message using a protocol such as S/MIME
 SIP [@?RFC3261] and XMPP [@?RFC6120].  For a variety of practical reasons, interoperable
 end-to-end encryption between IM systems was never deployed commercially.
 
-There are now several vendors prepared to implement MLS. In order to enable
+There are now several instant messaging vendors implementing MLS.
+In order to enable
 interoperable messaging conveyed "inside" MLS application messages, some
 additional specification and some minor changes are required. Also, the
 expectation of what constitutes basic features common across multiple IM
 systems has grown. It would be beneficial to provide an interoperable format
-for these additional features as well.  Most of these features can be
+for these additional features as well.  Most of these features could be
 implemented using a profile which describes how to use already-defined
 URIs, message headers, and MIME types.
 
-This proposal assumes that MLS clients can advertise MIME types they support
-and that MLS clients can determine what MIME types are required to join a
-specific MLS group. A companion proposal
-[@!I-D.mahy-dispatch-immi-mls-mime] defines two MLS extensions which
-meets this requirement. It would allow implementations to define groups
+This document explores issues and example solutions consistent with the
+More Instant Messaging Interoperability (MIMI) problem outline
+[@!I-D.mahy-mimi-problem-outline].
+
+This proposal assumes that MLS clients can advertise media types they support
+and that MLS clients can determine what media types are required to join a
+specific MLS group. Specifically, [@!I-D.mahy-mls-content-neg] defines
+two MLS extensions which
+meet this requirement. It would allow implementations to define groups
 with different MIME type requirements and it would allow MLS clients to send
 extended or proprietary messages that would be interpreted by some members
 of the group while assuring that an interoperable end-to-end encrypted
@@ -92,33 +100,19 @@ Below is a list of some features commonly found in IM group chat systems:
 
 ## Naming schemes
 
-IM systems have a number of types of identifiers. Not all systems use
-every type:
+IM systems have a number of types of identifiers. These are described in detail
+in [@?I-D.mahy-mimi-identity]. A few of these used in this document are:
 
-* client/device identifier (internal representation)
-* user identifier
-* handle identifier (external, friendly representation)
-* group conversation identifier
-* group or or channel name (external, friendly representation)
-* team identifier (less common)
-
-One user may have multiple clients (for example a mobile and a desktop client).
-A handle may refer to a single user or it may redirect to multiple users.
-In some systems, the user identifier is a handle. In other systems the user
-identifier is an internal representation, for example a UUID. Handles may be
-changed/renamed, but hopefully internal user identifiers do not.
-Unqualified handles are often prefixed with a commercial at-sign ("@").
-
-Likewise, group conversation identifiers could be internal or external
-representations, whereas group names or channel names are often external
-friendly representations.  Unqualified channel names are often prefixed
-with a hash character ("#"). Some systems have an additional level of hierarchy
-with a team identifier under which groups/channels can be organized and
-authorized.
+* handle identifier (external, friendly representation). This is the type 
+of identifier in the From header in the examples.
+* client/device identifier (internal representation). This is the type
+of identifier in the implied Sender header in the examples.
+* group or conversation or channel name (either internal or external representation).
+. This is the type of identifier in the implied To header in the examples.
 
 This proposal relies on URIs for naming and identifiers. All the example use
 the `im:` URI scheme (defined in [@!RFC3862]), but any instant messaging scheme
-is acceptable.
+could be used.
 
 ## Negotiation of MIME types
 
@@ -129,7 +123,7 @@ functionality described in this document AND a proprietary format for
 same-vendor clients simultaneously over the same group with end-to-end
 encryption.
 
-[@!I-D.mahy-dispatch-immi-mls-mime] contains the actual MLS extensions useful for negotiating
+[@!I-D.mahy-mls-content-neg] contains the actual MLS extensions useful for negotiating
 MIME types. The profile in this document requires support for receiving message/cpim,
 text/plain, text/markdown, and multipart MIME. All other mime types (including
 some recommended in this profile) are optional.
@@ -192,9 +186,9 @@ message to the Engineering Team MLS group. The following values are
 implied as if headers were present:
 
 * Implied Sender header from MLS sender:
-  <im:3b52249d-68f9-45ce-8bf5-c799f3cad7ec-0003@example.com>
+  <im:3b52249d-68f9-45ce-8bf5-c799f3cad7ec/0003@example.com>
 * Implied To header from MLS group: "Engineering Team"
-  <im:9dc867ca-3a01-4385-bb69-1573601c3c0c@example.com>
+  <im:#engineering_team@example.com>
 
 
 ~~~~~~~
@@ -583,16 +577,59 @@ TBC
 
 {backmatter}
 
-<reference anchor="I-D.mahy-dispatch-immi-mls-mime">
+<reference anchor="I-D.mahy-mimi-problem-outline">
    <front>
-      <title>Inside MLS Message Interop (IMMI) MIME type extensions</title>
+      <title>More Instant Messaging Interoperability (MIMI) problem outline</title>
       <author fullname="Rohan Mahy">
 	 <organization>Wire</organization>
       </author>
-      <date month="March" day="7" year="2022" />
+      <date month="July" day="11" year="2022" />
    </front>
-   <seriesInfo name="Internet-Draft" value="draft-mahy-dispatch-immi-mls-mime-00" />
-   <format type="TXT" target="https://www.ietf.org/archive/id/draft-mahy-dispatch-immi-mls-mime-00.txt" />
+   <seriesInfo name="Internet-Draft" value="draft-mahy-mimi-problem-outline-00" />
+   <format type="TXT" target="https://www.ietf.org/archive/id/draft-mahy-mimi-problem-outline-00.txt" />
+   <format type="HTML" target="https://www.ietf.org/archive/id/draft-mahy-mimi-problem-outline-00.html" />
+</reference>
+
+<reference anchor="I-D.mahy-mimi-identity">
+   <front>
+      <title>More Instant Messaging Interoperability (MIMI) Identity Concepts</title>
+      <author fullname="Rohan Mahy">
+	 <organization>Wire</organization>
+      </author>
+      <date month="July" day="11" year="2022" />
+   </front>
+   <seriesInfo name="Internet-Draft" value="draft-mahy-mimi-identity-00" />
+   <format type="TXT" target="https://www.ietf.org/archive/id/draft-mahy-mimi-identity-00.txt" />
+   <format type="HTML" target="https://www.ietf.org/archive/id/draft-mahy-mimi-identity-00.html" />
+</reference>
+
+<reference anchor="OTR" target="https://otr.cypherpunks.ca/otr-wpes.pdf">
+  <front>
+    <title>Off-the-Record Communication, or, Why Not To Use PGP</title>
+    <author fullname="Nikita Borisov">
+      <organization>UC Berkeley</organization>
+    </author>
+    <author fullname="Ian Goldberg">
+      <organization></organization>
+    </author>
+    <author fullname="Eric Brewer">
+      <organization>UC Berkeley</organization>
+    </author>
+    <date month="October" day="28" year="2004"/>
+  </front>
+</reference>
+
+<reference anchor="DoubleRatchet" target="https://signal.org/docs/specifications/doubleratchet/">
+  <front>
+    <title>The Double Ratchet Algorithm</title>
+    <author fullname="Trevor Perrin">
+      <organization>Signal</organization>
+    </author>
+    <author fullname="Moxie Marlinspike">
+      <organization>Signal</organization>
+    </author>
+    <date month="November" day="20" year="2016"/>
+  </front>
 </reference>
 
 
