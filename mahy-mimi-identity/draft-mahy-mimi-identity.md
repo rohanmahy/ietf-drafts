@@ -3,7 +3,7 @@ title = "More Instant Messaging Interoperability (MIMI) Identity Concepts"
 abbrev = "MIMI Identity"
 ipr= "trust200902"
 area = "art"
-workgroup = "mimi"
+workgroup = "MIMI BoF"
 keyword = ["mimi","immi","identity"]
 diagram = true
 
@@ -30,15 +30,16 @@ when using end-to-end encryption, for example with the MLS
 
 {mainmatter}
 
-# Terminology
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
-"SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to
-be interpreted as described in RFC 2119 [@!RFC2219].
 
 # Description
 
+TODO: add references for Double Ratchet X3DH etc
+
+The IETF began standardization work on interoperable Instant Messaging in the late 1990s,
+but since that period, the typical feature set of these systems has expanded widely
+and was largely driven by the industry without much standardization or interoperability.
 The MIMI (More Instant Messaging Interop) concept document [!@I-D.mahy-mimi-concept]
-identifies areas where more work is needed to have interoperable IM systems.
+identifies areas where more work is needed to build interoperable IM systems.
 
 The largest and most widely deployed Instant Messaging (IM) systems support
 end-to-end message encryption using a variant of the Double 
@@ -50,7 +51,7 @@ of sessions (with Double Ratchet) and groups (with MLS) once the participants in
 a conversation have been identified. However, the current state of most systems
 require the end user to manually verify key fingerprints or blindly trust their
 instant messaging service not to add and remove participants from their 
-conversations. This problem is exacerbated when these systems federate and try to
+conversations. This problem is exacerbated when these systems federate or try to
 interoperate.
 
 While some single vendor solutions exist, clearly an interoperable mechanism
@@ -105,7 +106,8 @@ User or account identifier:
 from the handle. This is especially useful when the handle is allowed to change.
 Unlike the handle, this identifier typically cannot change.  For example the user 
 identifier could be a UUID or a similar construction. In IRC, a user identifier is
-prefixed with a "!" character (example: `!jcapulet1583@example.com`).
+prefixed with a "!" character (example: `!jcapulet1583@example.com` for the "nick" 
+`@juliet`).
 
 Client or Device identifier:
 : Most commercial instant messaging systems allow a single user to have multiple
@@ -115,13 +117,14 @@ keys. Typically these identifiers are internal and not visible to the end-user (
 fully qualified JIDs are a rare exception). The client or device identifier is often
 based on a UUID, a persistent long-term unique identifier like an IMEI or MAC address,
 a sequence number assigned by the IM service domain, or a combination. In some cases
-the identifier may contain the user identifier.
+the identifier may contain the internal user identifier.  These identifiers look quite
+different across protocols and vendors.
 
-| Protocol    | Identifier Address  | Example                                      |
-| ----------- | ------------------- | -------------------------------------------- |
-| Jabber/XMPP | Fully-qualified JID | `juliet/balcony@example.com`                 |
-| SIP         | Contact Address     | `sip:juliet@[2001:db8::0225:96ff:fe12:3456]` |
-| Wire        | Qualified client ID | `BFuVxW5BfqaMEfJDc8R7Qw:072b@example.com`    |
+| Protocol    | Identifier Address  | Example                                                 |
+| ----------- | ------------------- | ------------------------------------------------------- |
+| Jabber/XMPP | Fully-qualified JID | `juliet/balcony@example.com`                            |
+| SIP         | Contact Address     | `sip:juliet@[2001:db8::0225:96ff:fe12:3456]`            |
+| Wire        | Qualified client ID | `0fd3e0dc-a2ff-4965-8873-509f0af0a75c:072b@example.com` |
 Table: some Client/Device identifier styles.
 
 Group Chat or Channel identifier (external):
@@ -144,30 +147,25 @@ Team or Workspace identifier:
 : A less common type of identifier among IM systems is used to describe a set of
 users or accounts. This is described variously as a team, workspace, or tenant.
 
-
-
-One user may have multiple clients (for example a mobile and a desktop client).
-Rarely, a handle may refer to a single user or it may redirect to multiple users.
+One user often has multiple clients (for example a mobile and a desktop client).
+A handle usually refers to a single user or rarely it may redirect to multiple users.
 In some systems, the user identifier is a handle. In other systems the user
 identifier is an internal representation, for example a UUID. Handles may be
-changed/renamed, but hopefully internal user identifiers do not.
-Unscoped handles are often prefixed with a commercial at-sign ("@").
-
-Likewise, group conversation identifiers could be internal or external
+changed/renamed, but hopefully internal user identifiers do not. Likewise, 
+group conversation identifiers could be internal or external
 representations, whereas group names or channel names are often external
-friendly representations.  Unscoped channel names are often prefixed
-with a hash character ("#"). Some systems have an additional level of hierarchy
-with a team identifier under which groups/channels can be organized and
-authorized.
-
-This proposal relies on URIs for naming and identifiers. All the example use
-the `im:` URI scheme (defined in [@!RFC3862]), but any instant messaging scheme
-is acceptable.
+friendly representations.  
 
 It is easy to imagine a loose hierarchy between these identifiers
-domain to user to device, but hard to agree on a rigid structure. 
+(domain to user to device), but hard to agree on a specific fixed structure. 
 In some systems, the group chat or session itself has
 a position in the hierarchy underneath the domain, the user, or the device.
+
+As described in the next section, 
+the author proposes using URIs as a container for interoperable IM identifiers.
+All the examples use
+the `im:` URI scheme (defined in [@!RFC3862]), but any instant messaging scheme
+should be acceptable as long as the comparison and validation rules are clear.
 
 
 # Representation of identifiers using URIs
@@ -178,24 +176,31 @@ schemes may not have been specified with this use of URIs in mind, the `im:`
 URI scheme should be flexible enough to represent all of or any needed subset of the
 previously discussed identifiers.
 
-XMPP can represent a domain, a handle (bare JID), or a device (fully qualified JID). 
-Unfortunately its xmpp: URI scheme was only designed to represent handles and domains.
-But the `im:` URI scheme can represent all XMPP identifiers:
+For example, the XMPP protocol can represent a domain, a handle (bare JID), 
+or a device (fully qualified JID). 
+Unfortunately its xmpp: URI scheme was only designed to represent handles and domains,
+but the `im:` URI scheme can represent all XMPP identifiers:
 
 * im:xmpp=example.com  (domain only)
 * im:xmpp=juliet@example.com  (bare JID - handle)
 * im:xmpp=juliet/balcony@example.com  (fully qualified JID - client/device)
 
 Likewise the IRC protocol can represent domain, handle (nick), user (account),
-and channel.
+and channel. The examples below represent a domain, a nick, a user, a local channel,
+abd three ways to specify the projectX channel.
 
-* im:irc=
-* im:irc=
-* im:irc=
-* im:irc=
+* im:irc=irc.example.com
+* im:irc=irc.example.com/juliet,isuser
+* im:irc=irc.example.com/juliet%21jcapulet1583%40example.com,isuser
+* im:irc=irc.example.com/%26local_announcements_channel
+* im:irc=irc.example.com/#projectX
+* im:irc=irc.example.com/%23projectX
+* im:irc=irc.example.com/%23projectX
+* im:irc=irc.example.com/%23projectX,ischannel
 
 Imagine a hypothetical WXYZ IM protocol with support for all our identifiers.
-These could be represented unambiguously using the conventions below:
+These could be represented unambiguously using the conventions below, or with an
+explicit parameter (ex: `;id-type=`):
 
 
 | id type  | unscoped form               | domain scoped form                      |
@@ -208,11 +213,11 @@ These could be represented unambiguously using the conventions below:
 | team     | ##engineering               | ##engineering@example.com               |
 | channel  | ##engineering/projectX      | ##engineering/projectX@example.com      |
 | group id | $TII9t5viBrXiXc             | $TII9t5viBrXiXc@example.com             |
-Table: examples of all identifier types in the WXYZ IM protocol
+Table: examples of all identifier types in the fictional WXYZ IM protocol
 
 
 Now imagine that WXYZ reserved the wxyz: URI scheme. The example below shows how
-most reasonable protocol-specific identifier schemes can be represented as an `im:`
+almost any reasonable protocol-specific identifier scheme can be represented as an `im:`
 URI.
 
 ```
@@ -230,11 +235,10 @@ im:wxyz=#projectX@example.com
 im:wxyz=##engineering@example.com
 im:wxyz=$TII9t5viBrXiX@example.com
 ```
+Figure: mapping the identifiers in the fictional WXYZ format into an im: URI
 
-Give example IRC URIs here.
-
-If there is no domain, an `im:` URI can use `local.invalid` in place of a resolvable
-domain name.
+Note that if there is no domain, an `im:` URI, or another scheme, could use
+`local.invalid` in place of a resolvable domain name.
 
 ```
 im:wxyz=%40alice@local.invalid
@@ -279,7 +283,9 @@ Double Ratchet-style prekeys.
 Example 2 (Single Combined Cert):
 : The CA generates a single certificate per client which covers both Alice's handle and
 her client identifier in the same certificate. Each of these certificates is used to
-sign MLS KeyPackages or Double Ratchet-style prekeys. 
+sign MLS KeyPackages or Double Ratchet-style prekeys. Note that there is no separate
+key pair used to refer to the user distinct from a device. All the legitimate device
+key pairs would be able to sign on behalf of the user.
 
 Example 3 (Cascading Certs):
 : The CA generates a single user certificate for Alice's handle and indicates that the
@@ -289,22 +295,27 @@ another certificate for Alice's phone client.
 The client certificates are used to sign MLS KeyPackages or
 Double Ratchet-style prekeys. 
 
-validatring these certificates wuold require...  ****
-
-The subjectAltName is a URI type 
-
-
-Regardless of the specific implementation, this model features a strong hierarchy.
-
-
 
 What is important in all these examples is that other clients involved in a session or
 group chat can validate the relevant credentials of the other participants in the
-session of group chat.
+session or group chat. Clients would need to be able to configure the relevant 
+trust roots and walk any hierarchy unambiguously. 
+
+When using certificates, this could include associating an Issuer URI in
+the issuerAltName with one of the URIs in the subjectAltName of another cert.
+Other mechanisms have analogous concepts.
+
+Regardless of the specific implementation, this model features a strong hierarchy.
+
+The advantage of this approach is to take advantage of a strong hierarchy which is
+already in use at an organization, especially if the organization is using an
+Identity Provider (IdP) for most of its services.  Even if the IM system is
+compromised, the presence of client without the correct end-to-end identity would
+be detected immediately.
  
- 
-The disadvantage of this approach is that if the CA colludes with an attacker or
-is compromised, the attacker can easily insert a rogue client which would be as
+The disadvantage of this approach is that if the CA colludes with a malicious IM
+system or both are compromised, an attacker or malicious IM system
+can easily insert a rogue client which would be as
 trusted as a legitimate client.
 
 
@@ -312,21 +323,23 @@ trusted as a legitimate client.
 
 In some communities, it may be appropriate to make assertions about IM
 identity by relying on a web of trust. The following specific example of this general
-method is used by the OMEMO community and proposed in []. 
+method is used by the OMEMO community and proposed in []. This document does not
+take any position on the specifics of the proposal, but uses it to illustrate
+a concrete implementation of a web of trust involving IM identifiers.
 
-It uses a web of trust with cross signing as follows:
+The example uses a web of trust with cross signing as follows:
 
-Each user has a master key.
-Alice's master key signs exactly two keys: Alice's device-signing key (which then signs
-her own device keys), and Alice's user-signing key (which can sign the master key of
-other users).
+- Each user (Alice and Bob) has a master key.
+- Alice's master key signs exactly two keys: 
+    * Alice's device-signing key (which then signs her own device keys), and 
+    * Alice's user-signing key (which can sign the master key of other users).
 
 The advantage of this approach is that if Alice's and Bob's keys, implementations,
-and devices are not compromised
+and devices are not compromised,
 there is no way the infrastructure can forge a key for Alice or Bob and insert
 an eavesdropper or active attacker. 
 The disadvantages of this approach are that this requires Alice's 
-device-singing key to be available any time
+device-signing key to be available any time
 Alice wants to add a new device, and Alice's user-signing key to be available
 anytime she wants to add a new user to her web of trust. This could either make
 those operations inconvenient and/or unnecessarily expose either or both of those
@@ -355,9 +368,9 @@ Figure: Alice and Bob cross sign each other's master keys
 
 In this trust model, a user with several services places a cross signature for all
 their services at a well known location on each of those services (for example a
-personal web site home page, an IM profile, the profile page on an open source code
+personal web site .well-known page, an IM profile, the profile page on an open source code
 repository, a social media About page, a picture sharing service profile page, 
-a professional interpersonal networking site, and a dating application profile).
+a professional interpersonal-networking site contact page, and a dating application profile).
 This concept was perhaps first implemented for non-technical users by Keybase.
 The user of this scheme likely expects that at any given moment
 there is a risk that one of these services is compromised or controlled by a
@@ -386,7 +399,13 @@ X.509 certificates are a mature technology for making assertions about identifie
 The supported assertions and identifier formats used in certificates are 
 somewhat archaic, inflexible, and pedantic, but well understood. The semantics
 are always that an Issuer asserts that a Subject has control of a specific 
-public key key pair. 
+public key key pair.  A handful of additional attributes can be added as X.509
+certificate extensions, although adding new extensions is laborious and
+time consuming. In practice new extensions are only added to facilitate the
+internals of managing the lifetime, validity, and applicability of certificates.
+X.509 extensions are not appropriate for arbitrary assertions or claims about the
+Subject.
+
 The Subject field
 contains a Distinguished Name, whose Common Name (CN) field can contain free form text.
 The subjectAltName can contain multiple other identifiers for the Subject
@@ -471,8 +490,8 @@ Subject.
 ## JSON Web Tokens (JWT) with Distributed Proof of Presence (DPoP)
 
 JSON Web Signing (JWS) [@!RFC7515] and JSON Web Tokens (JWT) [@!RFC7519] are toolkits for 
-making a variety of cryptographic claims. (CBOR Web tokens [@!RFC8392] are semantically
-equivalent.)
+making a variety of cryptographic claims. (CBOR Web Tokens [@!RFC8392] are semantically
+equivalent to JSON Web Tokens.)
 JWT is an appealing option for carrying IM identifiers and assertions, as the
 container type if flexible and the format is easy to implement. Unfortunately the
 semantics are poorly specified at the time of this writing.  
