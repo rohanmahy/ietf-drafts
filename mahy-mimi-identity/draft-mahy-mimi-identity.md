@@ -26,12 +26,13 @@ organization = "Wire"
 
 This document discusses concepts in instant messaging identity interoperability
 when using end-to-end encryption, for example with the MLS 
-(Message Layer Security) Protocol.
+(Message Layer Security) Protocol.  The goal is to explore the problem space in
+preparation for framework and requirements documents.
 
 {mainmatter}
 
 
-# Description
+# Introduction
 
 The IETF began standardization work on interoperable Instant Messaging in the late 1990s,
 but since that period, the typical feature set of these systems has expanded widely
@@ -65,6 +66,9 @@ Arguably, as with email, the success of XMPP [@?RFC6120] was partially due to
 the ease of communicating among XMPP users in different domains with 
 different XMPP servers, and a single
 standardized address format for all XMPP users.
+
+The goal of this document is to explore the problem space, so that the IETF community
+can write a consensus requirements document and framework.
 
 
 # Types of Identifiers
@@ -275,12 +279,12 @@ assertions about different types of IM identifiers with certificates:
 Example 1 (Separate Certs):
 : The CA generates one certificate for a user Alice which is used to sign Alice's profile.
 The CA also generates a separate certificate for Alice's desktop client and a third
-for her phone client. The client certificates are used to sign MLS KeyPackages or
+for her phone client. The private key in each client certificate is used to sign MLS KeyPackages or
 Double Ratchet-style prekeys. 
 
 Example 2 (Single Combined Cert):
 : The CA generates a single certificate per client which covers both Alice's handle and
-her client identifier in the same certificate. Each of these certificates is used to
+her client identifier in the same certificate. The private key in each of these certificates is used to
 sign MLS KeyPackages or Double Ratchet-style prekeys. Note that there is no separate
 key pair used to refer to the user distinct from a device. All the legitimate device
 key pairs would be able to sign on behalf of the user.
@@ -290,7 +294,7 @@ Example 3 (Cascading Certs):
 user certificate can issue its own certificates.
 The user certificate then generates one certificate for Alice's desktop client and
 another certificate for Alice's phone client.
-The client certificates are used to sign MLS KeyPackages or
+The private key in each client certificate is used to sign MLS KeyPackages or
 Double Ratchet-style prekeys. 
 
 
@@ -361,6 +365,9 @@ keys.
 +----+  +----+           :          +----+  +----+
 ~~~
 Figure: Alice and Bob cross sign each other's master keys
+
+A detailed architecture for Web of Trust key infrastructure which is not specific to
+Instant Messaging systems is the Mathematical Mesh [@?I-D.hallambaker-mesh-architecture]. 
 
 
 ## Well-known service cross signing
