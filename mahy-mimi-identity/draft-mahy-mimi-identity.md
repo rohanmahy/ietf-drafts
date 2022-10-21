@@ -493,18 +493,18 @@ Subject. Then another certificate issued by the handle URI for the device URI as
 Subject.
 
 
-## JSON Web Tokens (JWT) with Distributed Proof of Presence (DPoP)
+## JSON Web Tokens (JWT) with Demonstrating Proof of Posession (DPoP)
 
 JSON Web Signing (JWS) [@?RFC7515] and JSON Web Tokens (JWT) [@!RFC7519] are toolkits for 
 making a variety of cryptographic claims. (CBOR Web Tokens [@?RFC8392] are semantically
 equivalent to JSON Web Tokens.)
 JWT is an appealing option for carrying IM identifiers and assertions, as the
-container type if flexible and the format is easy to implement. Unfortunately the
+container type is flexible and the format is easy to implement. Unfortunately the
 semantics for validating identifiers are not as rigorously specified as for
 certificates at the time of this writing, and require
 additional specification work.  
 
-The JWT Distributed Proof of Possession (DPoP) specification [@!I-D.ietf-oauth-dpop]
+The JWT Demonstrating Proof of Possession (DPoP) specification [@!I-D.ietf-oauth-dpop]
 adds the ability
 to make claims which involve proof of possession of a (typically private) key, and
 to share those claims with third parties. The owner of a the key generates a `proof`
@@ -553,7 +553,7 @@ credentials [@!W3C.REC-vc-data-model-20191119]. The framework is well
 specified and has a very flexbile assertion structure, which 
 in addition to or in place of basic names and identifiers, can
 optionally include arbitrary attributes (ex: security clearance, age, nationality)
-up to and including Zero Knowledge Proofs depending on the profile being used. 
+up to and including selective disclosure depending on the profile being used.
 For example, a verifiable credential could be used to assert that an IM client
 belongs to a Customer Support agent of Sirius Cybernetic Corp, who speaks
 English and Vogon, and is qualified to give support for their Ident-I-Eeze product,
@@ -566,12 +566,12 @@ Credentials in the Verifiable Presentation. Specific credential types are define
 referencing ontologies. The example at the end of this section uses the
 VCard ontology [@!W3C.WD-vcard-rdf-20130924].
 
-Most of the examples for Verifiable Credentials use Decentralized Identifiers (DIDs),
-but there is no requirement to use DID or the associated esoteric cryptography 
+Most of the examples for Verifiable Credentials and many of the implementations by commercial identity 
+providers use Decentralized Identifiers (DIDs), but there is no requirement to use DID or the associated esoteric cryptography 
 in a specific VC profile.  (Indeed the VC profile for COVID-19 for vaccination
 does not use DIDs). The most significant problem with VCs are that
 there is no off-the-shelf mechanism for proof of possession of a private key, and no
-consensus to use VCs for straightforward identity assertions.
+consensus to use VCs for user authentication (as opposed to using VCs to assert identity attributes).
 
 
 ```
@@ -608,7 +608,7 @@ Below are other mechanisms which were not investigated due to a lack of time.
 
 - Anonymous credential schemes which can present attributes without the 
 long-term identity (ex: travel agent for specific team)
-- Zero-knowledge proofs
+- Zero-knowledge proofs - new work is starting in the IETF to define JSON Web Proofs (JWP), a new format that uses zero knowledge proofs.
 - Deniable credentials
 
 
