@@ -1,15 +1,15 @@
 %%%
-title = "Content Negotiation for Message Layer Security (MLS)"
-abbrev = "MLS Content Negotiation"
+title = "Content Type Advertisement for Message Layer Security (MLS)"
+abbrev = "MLS Content Advertisement"
 ipr= "trust200902"
 area = "sec"
 workgroup = "MLS"
-keyword = ["mls","content","negotiation","media type","mime"]
+keyword = ["mls","content","advertisement","media type","mime"]
 
 [seriesInfo]
 status = "informational"
 name = "Internet-Draft"
-value = "draft-mahy-mls-content-neg-00"
+value = "draft-mahy-mls-content-adv-00"
 stream = "IETF"
 
 [[author]]
@@ -22,6 +22,10 @@ organization = "Wire"
 %%%
 
 .# Abstract
+
+This document describes a default mechanism for the advertisement of content types
+and content type capabilities inside the Message Layer Security (MLS). It defines
+two new extensions and a minimal framing format.
 
 This document describes a default mechanism for the negotiation of content inside
 an MLS group. It defines two new extensions to the MLS (Messaging Layer Security)
@@ -44,88 +48,105 @@ MLS is a group key establishment protocol which has several applications.
 As described in the MLS architecture document [@!I-D.ietf-mls-architecture],
 applications need to define specific behavior of the MLS Distribution Service,
 the MLS Authentication Service, and the format and negotiation of application data.
-This document describes a default content negotiation mechanism recommended by the
+This document describes a default content advertisement mechanism recommended by the
 MLS architecture specification. (The MLS protocol specification does not define or
 prescribe any format for the encrypted `application_data` encoded by MLS.)
 
-This document describes two extensions
-to MLS which allow MLS clients to advertise their support for specific formats inside
-MLS `application_data`. These are expressed using the extensive IANA Media Types
-registry (formerly called MIME Types).  The `accepted_media_types` KeyPackage
-Extension lists the formats a client
-supports inside `application_data`, while the `required_media_types`
-GroupContext Extension specifies which media types are required for a particular
-MLS group. These allow clients to confirm that all members of a group can communicate.
+MLS includes a framework for advertising extension capabilities in LeafNodes which
+are used to represent each member in an MLS group and also included in
+KeyPackages. There is also an existing mechanism in which an MLS group specifies
+which MLS extensions are mandatory within the group. When the membership of a group
+changes, or when the policy of the group changes, it is responsibility of the
+committer to insure that the membership and policies are compatible.
+
+This document describes two extensions to MLS. The first allows MLS clients
+to advertise their support for specific formats inside MLS `application_data`.
+These are expressed using the extensive IANA Media Types registry (formerly
+called MIME Types).  The `accepted_media_types` LeafNode extension lists the
+formats a client supports inside `application_data`. The second, the
+`required_media_types` GroupContext extension specifies which media types
+need to be supported by all members of a particular MLS group. 
+These allow clients to confirm that all members of a group can communicate.
 Finally, this document defines a minimal framing format so MLS clients can signal
 which media type is being sent when multiple formats are permitted in the same group.
 As clients are upgraded to support new formats they can use these extensions
 to detect when all members support a new or more efficient encoding, or select the
-best format or formats to send.
+relevant format or formats to send.
 
 Note that the usage of IANA media types in general does not imply the usage of MIME
 Headers [@?RFC2045] for framing. Vendor-specific media subtypes starting with
 `vnd.` can be registered with IANA without standards action as described in
 [@?RFC6838].  Implementations which wish to send multiple formats in a single
 application message, may be interested in the `multipart/alternative` media type
-defined in [@?RFC2046] or may use or define another type with similar semantics.
-
+defined in [@?RFC2046] or may use or define another type with similar semantics
+(see Appendix A for a container format defined using TLS Presentation Language
+syntax [@!RFC8446]).
 
 # Extension Description
 
 This document specifies two MLS extensions of type MediaTypeList:
-`accepted_media_types`, and `required_media_types`.  The syntax is described using
+`accepted_media_types`, and `required_media_types`. The syntax is described using
 the TLS Presentation Language [@!RFC8446].
 
-MediaType is an ASCII string encoded as a TLS vector type containing a single IANA
-Media Type (including the top-level type and subtype) and any of its parameters.
-The formal internal structure is defined later in this section.
+MediaType is a TLS encoding of a single IANA media type (including top-level
+type and subtype) and any of its parameters. Even if the `parameter_value`
+would have required formatting as a `quoted-string` in a text encoding, only
+the contents inside the `quoted-string` are included in `parameter_value`.
 MediaTypeList is an ordered list of MediaType objects.
 
 ~~~ tls
-  // Text representation of a single IANA-registered Media Type.
-  MediaType media_type<V>;
-  
-  struct {
-      MediaType media_types<V>;
-  } MediaTypeList;
-  
-  MediaTypeList accepted_media_types;
-  MediaTypeList required_media_types;
+struct {
+    opaque parameter_name<V>;
+    /* Note: parameter_value never includes the quotation marks of an
+     * RFC 2045 quoted-string */
+    opaque parameter_value<V>;
+} Parameter;
+
+struct {
+    /* media_type is an IANA top-level media type, a "/" character, and
+     * the IANA media subtype */
+    opaque media_type<V>;
+    
+    /* a list of zero or more parameters defined for the subtype */
+    Parameter parameters<V>;
+} MediaType;
+
+struct {
+    MediaType media_types<V>;
+} MediaTypeList;
+
+MediaTypeList accepted_media_types;
+MediaTypeList required_media_types;
 ~~~
 
-The internal format of the MediaType is described in the Augmented Backus-Naur
-Form (ABNF) [@!RFC5234] grammar below. The `type` is the IANA top-level media type
-(ex: application), `subtype` is the IANA media subtype, and `parameter` follows the
-definition in [@!RFC2045] Section 5.1.  Whitespace inside an MLS MediaType is PROHIBITED.
-The type, subtype, and parameter attribute names are all case-insensitive.
-
-~~~ abnf
-  MediaType := type "/" subtype *(";" parameter)
-~~~
-
-
-Example Media Types:
+Example IANA media types with optional parameters:
 ~~~ artwork
   image/png
-  text/plain;charset="UTF-8"
+  text/plain ;charset="UTF-8"
   application/json
   application/vnd.example.msgbus+cbor
 ~~~
 
 An MLS client which implements this specification SHOULD include the
 `accepted_media_types` extension in its KeyPackages, listing
-all the media types it can receive.
+all the media types it can receive. As with all other extensions, the
+client also includes `accepted_media_types` in its `capabilities` field in
+its LeafNodes (including LeafNodes inside its KeyPackages).
 
 When creating a new MLS group for an application using this specification,
-the group includes a `required_media_type`
-extension in the GroupInfo Extensions.  When used in a group, the client
-MUST include the `required_media_types` extension in the list of extensions
-in RequiredCapabilities.
+the group MAY include a `required_media_type` extension in the GroupContext
+Extensions. As with all other extensions, the client also includes
+`accepted_media_types` in its `capabilities` field in its LeafNodes
+(including LeafNodes inside its KeyPackages). When used in a group, the client
+MUST include the `required_media_types` and `accepted_media_types` extensions
+in the list of extensions in RequiredCapabilities.
 
 MLS clients SHOULD NOT add an MLS client to an MLS group with `required_media_types`
-unless the MLS client advertises it can support all of the required Media
-Types. As an exception, a client could be preconfigured to know that
-certain clients support the mandatory types.
+unless the MLS client advertises it can support all of the required MediaTypes.
+As an exception, a client could be preconfigured to know that certain clients
+support the requried types. Likewise, an MLS client is already forbidden from
+issuing or committing a GroupContextExtensions Proposal which introduces required
+extensions which are not supported by all members in the resulting epoch.
 
 
 # Framing of application_data
@@ -141,51 +162,47 @@ as defined below:
   } ApplicationFraming;
 ~~~
 
-The `media_type` MAY be zero length, in which case, the Media type of the
-`application_content` is the first MediaType specified in `required_media_types`.
-
+The `media_type` MAY be zero length, in which case, the media type of the
+`application_content` is interpreted as the first MediaType specified in
+`required_media_types`.
 
 # IANA Considerations
 
 This document proposes registration of two MLS Extension Types.
 
+RFC EDITOR: Please replace XXXX throughout with the RFC number assigned to this document
+
 ## accepted_media_types MLS Extension Type
 
-The `accepted_media_types` MLS Extension Type is used inside KeyPackage objects. It
-contains a mediaTypeList representing all the media Types supported by the
-MLS client publishing the KeyPackage.
+The `accepted_media_types` MLS Extension Type is used inside LeafNode objects. It
+contains a MediaTypeList representing all the media types supported by the
+MLS client referred to by the LeafNode.
 
 ~~~~~~~~
   Template:
   Value: 0x0005
   Name: accepted_media_types
-  
-  Message(s): This extension may appear in KeyPackage objects
+  Message(s): This extension may appear in LeafNode objects
   Recommended: Y
   Reference: RFC XXXX
 ~~~~~~~~
 
-Description: list of media types supported by the MLS client advertising the KeyPackage
 
-
-## required_media_types GroupContext extension
+## required_media_types MLS Extension Type
 
 The required_media_types MLS Extension Type is used inside GroupContext objects. It
-contains a mediaTypeList representing the media Types which are mandatory for all
+contains a MediaTypeList representing the media types which are mandatory for all
 MLS members of the group to support.
 
 ~~~~~~~~
   Template:
   Value: 0x0006
   Name: required_media_types
-  
   Message(s): This extension may appear in GroupContext objects
   Recommended: Y
   Reference: RFC XXXX
 ~~~~~~~~
 
-Description: list of media types which every member of the MLS group is
-required to support.
 
 # Security Considerations
 
@@ -202,12 +219,4 @@ joining or sending messages in an established group, by requiring a list of
 required media types which the attacker knows is unsupported. This attack is
 not especially helpful, as taking over group administration can have more
 disruptive effects.
-
-{backmatter}
-
-
-
-
-
-
 
