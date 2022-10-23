@@ -103,8 +103,8 @@ struct {
 } Parameter;
 
 struct {
-    /* media_type is an IANA top-level media type, a "/" character, and
-     * the IANA media subtype */
+    /* media_type is an IANA top-level media type, a "/" character,
+     * and the IANA media subtype */
     opaque media_type<V>;
     
     /* a list of zero or more parameters defined for the subtype */
@@ -219,4 +219,6 @@ joining or sending messages in an established group, by requiring a list of
 required media types which the attacker knows is unsupported. This attack is
 not especially helpful, as taking over group administration can have more
 disruptive effects.
+
+{backmatter}
 
