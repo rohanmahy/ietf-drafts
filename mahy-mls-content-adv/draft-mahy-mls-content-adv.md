@@ -39,8 +39,9 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to 
 be interpreted as described in RFC 2119 [@!RFC2219].
 
-The terms MLS client, MLS group, and KeyPackage have the same meanings as in
-the MLS protocol [@!I-D.ietf-mls-protocol].
+The terms MLS client, MLS group, LeafNode, GroupContext, KeyPackage,
+GroupContextExtensions Proposal, and RequiredCapabilities have
+the same meanings as in the MLS protocol [@!I-D.ietf-mls-protocol].
 
 # Introduction
 
