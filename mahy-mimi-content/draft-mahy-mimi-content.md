@@ -228,7 +228,7 @@ Right on! _Congratulations_ 'all!
 
 A reaction, uses the reaction Content-Disposition token defined in [@RFC9078].
 This Content-Disposition token indicates that the intended disposition of the
-contents of the message is a reaction.
+ccontents of the message is a reaction.
 
 The content in the sample message is a single Unicode heart character (U+2665).
 Discovering the range of characters each implementation could render as a
@@ -338,6 +338,27 @@ From: <im:bob-jones@example.com>
 DateTime: 2022-02-08T22:13:57-00:00
 Message-ID: <89d3472622a4@example.com>
 Supersedes: <e701beee59f9@example.com>
+
+Content-Length: 0
+~~~~~~~
+
+## Unlike
+
+In most IM systems, not only is it possible to react to a message ("Like"),
+but it is possible to remove a previous reaction ("Unlike"). This can be
+accomplished by deleting the message which creates the original reaction
+
+If Cathy removes her reaction, we would represent the removal using a
+Supercedes header with an empty body, referring to the message which
+created the reaction, as shown below.
+
+~~~~~~~
+Content-type: message/cpim
+
+From: <im:cathy-washington@example.com>
+DateTime: 2022-02-08T22:14:14-00:00
+Message-ID: <d052cace46f8@example.com>
+Supercedes: <1a771ca1d84f@example.com>
 
 Content-Length: 0
 ~~~~~~~
