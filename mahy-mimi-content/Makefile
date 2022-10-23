@@ -16,6 +16,6 @@ all: $(targets)
 idnits: $(draft).txt
 	idnits $<
 
-submit:
+submit: $(draft).xml
 	cp $(draft).xml ../submitted/$(draft)-$(version).xml 
 
