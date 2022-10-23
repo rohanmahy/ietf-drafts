@@ -27,11 +27,6 @@ This document describes a default mechanism for the advertisement of content typ
 and content type capabilities inside the Message Layer Security (MLS). It defines
 two new extensions and a minimal framing format.
 
-This document describes a default mechanism for the negotiation of content inside
-an MLS group. It defines two new extensions to the MLS (Messaging Layer Security)
-Protocol to allow for negotiation of media types exchanged among members of an
-MLS group, and a minimal framing format.
-
 {mainmatter}
 
 # Terminology
