@@ -128,8 +128,12 @@ Example IANA media types with optional parameters:
   application/vnd.example.msgbus+cbor
 ~~~
 
+For the example media type for `text/plain`, the `media_type` field
+would be `text/plain`, `parameters` would contain a single Parameter
+with a `parameter_name` of `charset` and a `parameter_value` of `UTF-8`.
+
 An MLS client which implements this specification SHOULD include the
-`accepted_media_types` extension in its KeyPackages, listing
+`accepted_media_types` extension in its LeafNodes, listing
 all the media types it can receive. As with all other extensions, the
 client also includes `accepted_media_types` in its `capabilities` field in
 its LeafNodes (including LeafNodes inside its KeyPackages).
@@ -137,7 +141,7 @@ its LeafNodes (including LeafNodes inside its KeyPackages).
 When creating a new MLS group for an application using this specification,
 the group MAY include a `required_media_type` extension in the GroupContext
 Extensions. As with all other extensions, the client also includes
-`accepted_media_types` in its `capabilities` field in its LeafNodes
+`required_media_types` in its `capabilities` field in its LeafNodes
 (including LeafNodes inside its KeyPackages). When used in a group, the client
 MUST include the `required_media_types` and `accepted_media_types` extensions
 in the list of extensions in RequiredCapabilities.
