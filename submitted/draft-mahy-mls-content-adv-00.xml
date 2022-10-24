@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
+<rfc version="3" ipr="trust200902" docName="draft-mahy-mls-content-adv-00" submissionType="IETF" category="info" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" consensus="true">
+
+<front>
+<title abbrev="MLS Content Advertisement">Content Type Advertisement for Message Layer Security (MLS)</title><seriesInfo value="draft-mahy-mls-content-adv-00" stream="IETF" status="informational" name="Internet-Draft"></seriesInfo>
+<author initials="R." surname="Mahy" fullname="Rohan Mahy"><organization>Wire</organization><address><postal><street></street>
+</postal><email>rohan.mahy@wire.com</email>
+</address></author><date/>
+<area>sec</area>
+<workgroup>MLS</workgroup>
+<keyword>mls</keyword>
+<keyword>content</keyword>
+<keyword>advertisement</keyword>
+<keyword>media type</keyword>
+<keyword>mime</keyword>
+
+<abstract>
+<t>This document describes a default mechanism for the advertisement of content types
+and content type capabilities inside the Message Layer Security (MLS). It defines
+two new extensions and a minimal framing format.</t>
+</abstract>
+
+</front>
+
+<middle>
+
+<section anchor="terminology"><name>Terminology</name>
+<t>The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL NOT&quot;, &quot;SHOULD&quot;,
+&quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;, &quot;MAY&quot;, and &quot;OPTIONAL&quot; in this document are to
+be interpreted as described in RFC 2119 <xref target="RFC2219"></xref>.</t>
+<t>The terms MLS client, MLS group, LeafNode, GroupContext, KeyPackage,
+GroupContextExtensions Proposal, and RequiredCapabilities have
+the same meanings as in the MLS protocol <xref target="I-D.ietf-mls-protocol"></xref>.</t>
+</section>
+
+<section anchor="introduction"><name>Introduction</name>
+<t>MLS is a group key establishment protocol which has several applications.
+As described in the MLS architecture document <xref target="I-D.ietf-mls-architecture"></xref>,
+applications need to define specific behavior of the MLS Distribution Service,
+the MLS Authentication Service, and the format and negotiation of application data.
+This document describes a default content advertisement mechanism recommended by the
+MLS architecture specification. (The MLS protocol specification does not define or
+prescribe any format for the encrypted <tt>application_data</tt> encoded by MLS.)</t>
+<t>MLS includes a framework for advertising extension capabilities in LeafNodes which
+are used to represent each member in an MLS group and also included in
+KeyPackages. There is also an existing mechanism in which an MLS group specifies
+which MLS extensions are mandatory within the group. When the membership of a group
+changes, or when the policy of the group changes, it is responsibility of the
+committer to insure that the membership and policies are compatible.</t>
+<t>This document describes two extensions to MLS. The first allows MLS clients
+to advertise their support for specific formats inside MLS <tt>application_data</tt>.
+These are expressed using the extensive IANA Media Types registry (formerly
+called MIME Types).  The <tt>accepted_media_types</tt> LeafNode extension lists the
+formats a client supports inside <tt>application_data</tt>. The second, the
+<tt>required_media_types</tt> GroupContext extension specifies which media types
+need to be supported by all members of a particular MLS group.
+These allow clients to confirm that all members of a group can communicate.
+Finally, this document defines a minimal framing format so MLS clients can signal
+which media type is being sent when multiple formats are permitted in the same group.
+As clients are upgraded to support new formats they can use these extensions
+to detect when all members support a new or more efficient encoding, or select the
+relevant format or formats to send.</t>
+<t>Note that the usage of IANA media types in general does not imply the usage of MIME
+Headers <xref target="RFC2045"></xref> for framing. Vendor-specific media subtypes starting with
+<tt>vnd.</tt> can be registered with IANA without standards action as described in
+<xref target="RFC6838"></xref>.  Implementations which wish to send multiple formats in a single
+application message, may be interested in the <tt>multipart/alternative</tt> media type
+defined in <xref target="RFC2046"></xref> or may use or define another type with similar semantics
+(see Appendix A for a container format defined using TLS Presentation Language
+syntax <xref target="RFC8446"></xref>).</t>
+</section>
+
+<section anchor="extension-description"><name>Extension Description</name>
+<t>This document specifies two MLS extensions of type MediaTypeList:
+<tt>accepted_media_types</tt>, and <tt>required_media_types</tt>. The syntax is described using
+the TLS Presentation Language <xref target="RFC8446"></xref>.</t>
+<t>MediaType is a TLS encoding of a single IANA media type (including top-level
+type and subtype) and any of its parameters. Even if the <tt>parameter_value</tt>
+would have required formatting as a <tt>quoted-string</tt> in a text encoding, only
+the contents inside the <tt>quoted-string</tt> are included in <tt>parameter_value</tt>.
+MediaTypeList is an ordered list of MediaType objects.</t>
+
+<sourcecode type="tls">struct {
+    opaque parameter_name&lt;V&gt;;
+    /* Note: parameter_value never includes the quotation marks of an
+     * RFC 2045 quoted-string */
+    opaque parameter_value&lt;V&gt;;
+} Parameter;
+
+struct {
+    /* media_type is an IANA top-level media type, a &quot;/&quot; character,
+     * and the IANA media subtype */
+    opaque media_type&lt;V&gt;;
+    
+    /* a list of zero or more parameters defined for the subtype */
+    Parameter parameters&lt;V&gt;;
+} MediaType;
+
+struct {
+    MediaType media_types&lt;V&gt;;
+} MediaTypeList;
+
+MediaTypeList accepted_media_types;
+MediaTypeList required_media_types;
+</sourcecode>
+<t>Example IANA media types with optional parameters:</t>
+
+<sourcecode type="artwork">  image/png
+  text/plain ;charset=&quot;UTF-8&quot;
+  application/json
+  application/vnd.example.msgbus+cbor
+</sourcecode>
+<t>For the example media type for <tt>text/plain</tt>, the <tt>media_type</tt> field
+would be <tt>text/plain</tt>, <tt>parameters</tt> would contain a single Parameter
+with a <tt>parameter_name</tt> of <tt>charset</tt> and a <tt>parameter_value</tt> of <tt>UTF-8</tt>.</t>
+<t>An MLS client which implements this specification SHOULD include the
+<tt>accepted_media_types</tt> extension in its LeafNodes, listing
+all the media types it can receive. As with all other extensions, the
+client also includes <tt>accepted_media_types</tt> in its <tt>capabilities</tt> field in
+its LeafNodes (including LeafNodes inside its KeyPackages).</t>
+<t>When creating a new MLS group for an application using this specification,
+the group MAY include a <tt>required_media_type</tt> extension in the GroupContext
+Extensions. As with all other extensions, the client also includes
+<tt>required_media_types</tt> in its <tt>capabilities</tt> field in its LeafNodes
+(including LeafNodes inside its KeyPackages). When used in a group, the client
+MUST include the <tt>required_media_types</tt> and <tt>accepted_media_types</tt> extensions
+in the list of extensions in RequiredCapabilities.</t>
+<t>MLS clients SHOULD NOT add an MLS client to an MLS group with <tt>required_media_types</tt>
+unless the MLS client advertises it can support all of the required MediaTypes.
+As an exception, a client could be preconfigured to know that certain clients
+support the requried types. Likewise, an MLS client is already forbidden from
+issuing or committing a GroupContextExtensions Proposal which introduces required
+extensions which are not supported by all members in the resulting epoch.</t>
+</section>
+
+<section anchor="framing-of-application-data"><name>Framing of application_data</name>
+<t>When an MLS group contains the <tt>required_media_types</tt> GroupContext extension,
+the <tt>application_data</tt> sent in that group is interpreted as <tt>ApplicationFraming</tt>
+as defined below:</t>
+
+<sourcecode type="tls">  struct {
+      MediaType media_type;
+      opaque&lt;V&gt; application_content;
+  } ApplicationFraming;
+</sourcecode>
+<t>The <tt>media_type</tt> MAY be zero length, in which case, the media type of the
+<tt>application_content</tt> is interpreted as the first MediaType specified in
+<tt>required_media_types</tt>.</t>
+</section>
+
+<section anchor="iana-considerations"><name>IANA Considerations</name>
+<t>This document proposes registration of two MLS Extension Types.</t>
+<t>RFC EDITOR: Please replace XXXX throughout with the RFC number assigned to this document</t>
+
+<section anchor="accepted-media-types-mls-extension-type"><name>accepted_media_types MLS Extension Type</name>
+<t>The <tt>accepted_media_types</tt> MLS Extension Type is used inside LeafNode objects. It
+contains a MediaTypeList representing all the media types supported by the
+MLS client referred to by the LeafNode.</t>
+
+<artwork>  Template:
+  Value: 0x0005
+  Name: accepted_media_types
+  Message(s): This extension may appear in LeafNode objects
+  Recommended: Y
+  Reference: RFC XXXX
+</artwork>
+</section>
+
+<section anchor="required-media-types-mls-extension-type"><name>required_media_types MLS Extension Type</name>
+<t>The required_media_types MLS Extension Type is used inside GroupContext objects. It
+contains a MediaTypeList representing the media types which are mandatory for all
+MLS members of the group to support.</t>
+
+<artwork>  Template:
+  Value: 0x0006
+  Name: required_media_types
+  Message(s): This extension may appear in GroupContext objects
+  Recommended: Y
+  Reference: RFC XXXX
+</artwork>
+</section>
+</section>
+
+<section anchor="security-considerations"><name>Security Considerations</name>
+<t>The Security Considerations of MLS apply.</t>
+<t>Use of the extensions in this document
+could leak some private information both in KeyPackages and inside an MLS group.
+They could be used to infer a specific implementation, platform, or even version.
+Clients should consider carefully the implications in their environment of
+making a list of acceptable media types available.</t>
+<t>A client which can take over group administration could prevent members from
+joining or sending messages in an established group, by requiring a list of
+required media types which the attacker knows is unsupported. This attack is
+not especially helpful, as taking over group administration can have more
+disruptive effects.</t>
+</section>
+
+</middle>
+
+<back>
+<references><name>Normative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.ietf-mls-architecture.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.ietf-mls-protocol.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2219.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8446.xml"/>
+</references>
+<references><name>Informative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2045.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2046.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6838.xml"/>
+</references>
+
+<section anchor="tls-presentation-language-multipart-container-format"><name>TLS Presentation Language multipart container format</name>
+<t>In a heterogenous group of MLS clients, it is often desirable to send more than one
+media type as alternatives, such that MLS clients have a choice of which media
+type to render. For example, imagine an MLS group containing a set of clients
+which support a common video format and a subset which only support animated GIFs.
+The sender could send a <tt>multipart/alternative</tt> <xref target="RFC2046"></xref> container containing
+both media types. Every client in the group could render something resembling the
+media sent.</t>
+<t>Likewise it is often desirable to send more than one media type intended to be
+rendered together as in (for example a rich text document with embedded images),
+which can be represented using the <tt>multipart/mixed</tt> <xref target="RFC2046"></xref> media type.</t>
+<t>Some implementors complain that the multipart types are unnatural to use inside a
+binary protocol which requires explicit lengths. Concretely, an implementation has
+to scan through the entire content to construct a boundary token which is not
+contained in the content.</t>
+<t>The author does not care one whit about the specific syntax used, but presents
+a multipart container format using the TLS presentation language syntax.</t>
+<t>Note that there is a minor semantic difference between multipart/alternative and
+the proposal below. In multipart/alternative, the parts are presented in
+preference order by the sender. The receiver is support to render the first type
+which it supports. This container includes an ordering flag. As well, even if the
+flag is ordered, it is up to the IETF community to decide if it is acceptable for
+the receiver to choose its &quot;best&quot; format to render among an ordered preference list
+provided by the sender, or if the receiver must respect the ordered preference of
+the sender.</t>
+
+<sourcecode type="tls">struct {
+    /* a valid &quot;Language-tag&quot; as defined in RFC 5646 */
+    opaque language_tag&lt;1..52&gt;;
+} LanguageTag;
+
+struct {
+  ContentType content_type;
+  LanguageTag content_languages&lt;V&gt;;
+  opaque&lt;V&gt; body;
+} Part;
+
+enum {
+  reserved(0),
+  multipart_container_v1(1),
+  (255)
+} MultipartVersion;
+
+enum {
+  reserved(0),
+  mixed(1),
+  alternative(2),
+  (255)
+} MultipartSemantics;
+
+enum {
+  reserved(0),
+  unordered(1),
+  ordered(2),
+  (255)
+} MultipartOrdering;
+
+struct {
+    uint8 container_version;
+    uint16 number_of_parts;
+    MultipartSemantics semantics;
+    MultipartOrdering ordering;
+    Part parts&lt;V&gt;;
+} MultipartContainer;
+</sourcecode>
+</section>
+
+</back>
+
+</rfc>

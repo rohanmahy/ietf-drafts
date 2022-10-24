@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
+<rfc version="3" ipr="trust200902" docName="draft-mahy-mimi-problem-outline-01" submissionType="IETF" category="info" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" consensus="true">
+
+<front>
+<title abbrev="MIMI problem outline">More Instant Messaging Interoperability (MIMI) problem outline</title><seriesInfo value="draft-mahy-mimi-problem-outline-01" stream="IETF" status="informational" name="Internet-Draft"></seriesInfo>
+<author initials="R." surname="Mahy" fullname="Rohan Mahy"><organization>Wire</organization><address><postal><street></street>
+</postal><email>rohan.mahy@wire.com</email>
+</address></author><date/>
+<area>art</area>
+<workgroup>MIMI BoF</workgroup>
+<keyword>mimi</keyword>
+<keyword>immi</keyword>
+
+<abstract>
+<t>Instant Messaging interoperability requirements have changed dramatically since
+the last IETF activity in the space. This document presents an outline of problems
+that need to be addressed to make possible interoperability of modern Instant
+Messaging systems. The goal of this problem outline is to point at more detailed
+drafts which spawn discussion and eventually spur the IETF standards process.</t>
+</abstract>
+
+</front>
+
+<middle>
+
+<section anchor="overview"><name>Overview</name>
+<t>The IETF has been working on Instant Messaging Interoperability since the late 1990s.
+At the time, different groups within IETF proposed separate protocol suites (SIMPLE,
+APEX, and XMPP) because the community could not come to consensus on a single protocol
+(arguably due to a lack of consensus on the additional requirements which made these
+proposals unique). In the interests of interoperability, the IMPP Working Group
+developed a general framework for interoperability <xref target="RFC3860"></xref>, and the Common Presence
+and Instant Messaging (CPIM) Message Format <xref target="RFC3862"></xref>, an interoperability format that
+could pass through gateways among these protocols, even when end-to-end encrypted.</t>
+<t>The CPIM model assumed standalone encryption of each message using a protocol such
+as S/MIME <xref target="RFC8551"></xref> or PGP <xref target="RFC3156"></xref>. This model was not widely adopted, but many
+Instant Messaging systems around this time frame began to add optional end-to-end
+encryption with OTR (Off The Record) <xref target="OTR"></xref>, and eventually incorporated variants of
+the Double Ratchet protocol <xref target="DoubleRatchet"></xref>, originally popularized by Signal.</t>
+<t>Today, group chats are the norm, most modern instant messaging systems are end-to-end
+encrypted (many by default or always) using a variant of DoubleRatchet, and the
+typical feature set includes a plethora of features not included in CPIM: plain
+text and rich text messaging, delivery notifications, read receipts, replies,
+reactions, editing or deleting previously sent messages, and expiring messages.
+Almost all systems provide a way to share files/audio/videos, and many support
+calling and/or conferencing features (often using WebRTC). Some IM vendors are
+implementing MLS <xref target="I-D.ietf-mls-protocol"></xref>, a group key establishment protocol
+motivated by the desire for group chat with efficient end-to-end encryption.</t>
+<t>Unfortunately, federation of these IM systems is still rare and interoperability of
+the major IM systems in almost non-existent.  It would be incredibly beneficial to
+provide interoperable best practices and solutions which IM vendors can incorporate
+into modern IM systems. Indeed, large customers and governments are already putting
+pressure on these IM vendors. The European Union's Digital Markets Act [DMA] is a
+recent motivating example.</t>
+<t>Instant Messaging interoperability requirements have changed dramatically since
+the IETF last activity in the space. This document presents an outline of problems
+that need to be addressed to make possible interoperability of modern Instant
+Messaging systems. The goal of this problem outline is to point at more detailed
+drafts which spur discussion and eventually spur the IETF standards process.</t>
+<t>The larger goals of MIMI (More Instant Messaging Interoperability) are to start
+discussion; gather requirements common to many IM systems, focusing on
+the most immediate needs first; develop requirements and frameworks; and
+eventually to identify and evaluate existing solutions to these
+specific problems; and to assemble standards and technology which already largely
+exist into profiles and best current practices. Where special expertise in another
+Working Group or standards body is required, that work would be delegated to the
+specialty group.</t>
+</section>
+
+<section anchor="interoperability-problem-areas"><name>Interoperability Problem Areas</name>
+
+<section anchor="naming-schemes"><name>Naming schemes</name>
+<t>IM systems have a number of identifiers with different characteristics which are
+relevant for interoperability.</t>
+
+<ul spacing="compact">
+<li>Domain identitifer</li>
+<li>Handle identifier</li>
+<li>User or Account identifier</li>
+<li>Client or Device identifier</li>
+<li>Group Chat or Channel identifier</li>
+<li>Group, Conversation, or Session identifiers</li>
+<li>Team or Workspace identifier</li>
+</ul>
+<t>These identifiers are discussed in detail in
+<xref target="I-D.mahy-mimi-identity"></xref> as well as how they can be represented using URIs.</t>
+</section>
+
+<section anchor="end-to-end-im-identity"><name>End-to-end IM Identity</name>
+<t>The largest and most widely deployed Instant Messaging (IM) systems support
+end-to-end message encryption using a variant of the Double
+Ratchet protocol <xref target="DoubleRatchet"></xref> popularized by Signal and the companion X3DH <xref target="X3DH"></xref>
+key agreement protocol. Many vendors are also keen to support the Message Layer Security
+(MLS) protocol <xref target="I-D.ietf-mls-protocol"></xref> and architecture <xref target="I-D.ietf-mls-architecture"></xref>.
+These protocols provide confidentiality
+of sessions (with Double Ratchet) and groups (with MLS) once the participants in
+a conversation have been identified. However, the current state of most systems
+require the end user to manually verify key fingerprints or blindly trust their
+instant messaging service not to add and remove participants from their
+conversations. This problem is exacerbated when these systems federate or try to
+interoperate.</t>
+<t>This problem space is explored in <xref target="I-D.mahy-mimi-identity"></xref>, and a specific
+architecture is described in <xref target="I-D.barnes-mimi-identity-arch"></xref>.</t>
+</section>
+
+<section anchor="discovery"><name>Discovery</name>
+
+<section anchor="domain-level-service-discovery"><name>Domain-level service discovery</name>
+<t>The discovery of IM services using DNS SRV records is described in <xref target="RFC3861"></xref>.</t>
+</section>
+
+<section anchor="user-discovery-and-discovery-of-device-keying-material"><name>User discovery and discovery of device keying material</name>
+<t>TBC.</t>
+<t>One vendor mentioned a strawperson outline for user discovery:</t>
+
+<ul spacing="compact">
+<li><t>well-known URL with query format on each domain</t>
+
+<ul spacing="compact">
+<li><t>search string</t>
+
+<ul spacing="compact">
+<li>could be handle, internal user ID, internal device ID; search by anonymous credential?</li>
+<li><t>what type of key are you searching for?</t>
+
+<ul spacing="compact">
+<li>keypackages</li>
+<li>user keys</li>
+<li>domain keys</li>
+</ul></li>
+</ul></li>
+<li>searcher identity and proof of identity (optional)</li>
+<li>rate limiting</li>
+</ul></li>
+</ul>
+<t>The privacy implications of user discovery are of the utmost importance, and may
+differ widely depending on the specific messaging application.</t>
+</section>
+</section>
+
+<section anchor="profiles-of-security-protocols-to-facilitate-interoperable-end-to-end-encryption"><name>Profiles of security protocols to facilitate interoperable end-to-end encryption</name>
+<t>Enabling strong user privacy has been a core concern of the IETF for decades, and was
+the main motivation for the CPIM message format. S/MIME and PGP where proposed for
+use with instant messaging systems, but never widely adopted. The first broad adoption
+of end-to-end encryption in messaging was with Off The Record (OTR) <xref target="OTR"></xref> introduced
+in 2004, which also included perfect forward secrecy (which protects past
+communications from future compromises). As OTR was available in XMPP clients, it
+was possible to use across domains.</t>
+
+<section anchor="protocols-based-on-double-ratchet"><name>Protocols based on Double Ratchet</name>
+<t>Signal introduced what is now know as the Double Ratchet protocol in 2013. Today there
+are over a dozen implementations of variations of Double Ratchet. While the differences
+among these variations tend to be small, there is little emphasis on interoperability.</t>
+<t>Tens of instant messaging applications implement some form of end-to-end encryption
+using a protocol based on the Double Ratchet protocol. Double Ratchet was originally
+referred to as Axolotl Ratchet when it was introduced in 2013 and popularized in the
+Signal application.  Most applications using Double Ratchet also use <xref target="X3DH"></xref> for initial
+key agreement.  However the initial setup of encryption sessions among these applications
+are often incompatible.</t>
+<t>Most implementations of Double Ratchet use a fixed ciphersuite and have no
+content negotiation or advertisement mechanism.</t>
+</section>
+
+<section anchor="instant-messaging-using-messaging-layer-security"><name>Instant Messaging using Messaging Layer Security</name>
+<t>Messaging Layer Security (MLS) <xref target="I-D.ietf-mls-protocol"></xref> is a group key agreement
+protocol with application message encryption and authentication. As described in
+the MLS architecture <xref target="I-D.ietf-mls-architecture"></xref>, the protocol does not define
+the specific behavior of the Distribution Service (DS) or the Authentication Service
+(AS).</t>
+<t>Some specific issues involving the use of MLS is a multi-domain Instant Messaging
+context are discussed in the MLS federation draft <xref target="I-D.ietf-mls-federation"></xref>.</t>
+<t>More documentation on the use of MLS in the Instant Messaging Context:
+(ex: long-lived persistent groups) would be invaluable.</t>
+</section>
+</section>
+
+<section anchor="content-negotiation"><name>Content negotiation</name>
+<t>Protocol independent content negotiation is discussed in [?RFC2703]. In this
+framework, content negotiation covers these elements:</t>
+
+<ul spacing="compact">
+<li>describing the data resource to be transmitted</li>
+<li>expressing sender capabilities</li>
+<li>expressing receiver capabilities</li>
+<li>a protocol to exchange capabilities</li>
+</ul>
+<t>In end-to-end encrypted group messaging, the problem is slightly different;
+an intermediary should not be able to read the sender's content, let alone
+change the format of the message for different recipients. Furthermore, in
+MLS a message in a group is encrypted once for all the recipients in the
+group, some of whom may be offline and receive the message later. The sender
+has one opportunity to craft an encrypted message which can be processed by all
+the members of an MLS group. Rather than have a protocol to exchange capabilities,
+MLS content advertising insures that each member knows any media types required
+in the group, knows the content capabilities of every group member at all times,
+and knows the media type of each received message.  Note that the message could
+be be a container type such as a multipart <xref target="RFC2046"></xref> expressing different
+alternative expressions of the same content in a single message.</t>
+<t>The requirements for content negotiation are discussed in the MLS architecture
+document <xref target="I-D.ietf-mls-architecture"></xref> and a specific content advertisement
+mechanism for MLS is described in <xref target="I-D.mahy-mls-content-adv"></xref>.</t>
+</section>
+
+<section anchor="content-format-interoperability"><name>Content format interoperability</name>
+<t>The expectation of basic or common features in IM systems has grown. Below is a list
+of some features commonly found in most IM group chat systems:</t>
+
+<ul spacing="compact">
+<li>plain text and rich text messaging</li>
+<li>delivery notifications</li>
+<li>read receipts</li>
+<li>replies</li>
+<li>reactions</li>
+<li>edit or delete previously sent messages</li>
+<li>expiring messages</li>
+<li>knock / ping</li>
+<li>shared files/audio/videos</li>
+<li>calling / conferencing</li>
+</ul>
+<t>Once messages are encrypted end-to-end there is no further opportunity for content
+negotiation.
+Exploring requirements, semantics, and an example common format for messages,
+which would allow proprietary messages or
+extensions to be delivered in parallel to the same users is described in
+<xref target="I-D.mahy-mimi-content"></xref>. It discusses all of the features above except for
+calling and conferencing.</t>
+</section>
+
+<section anchor="calling-and-conferencing"><name>Calling and Conferencing</name>
+<t>Many IM systems offer 1:1 calling and/or conferencing of real-time audio and
+video. The majority of these systems use a exchange a session description offer
+and answer to setup sessions of media transmitted using DTLS-SRTP <xref target="RFC5764"></xref>,
+including the fingerprint of the DTLS-SRTP self-signed certificate. These
+messages are typically end-to-end encrypted. During 1:1 calls, the session
+descriptions (an offer and an answer) are shared for one or more DTLS-SRTP
+flows which carry the actual media.</t>
+<t>For conferences, a client typically contacts a conferencing system which sets
+up a session between the client and the media forwarder. The client needs to
+have the URI of the specific conference and support the protocol used to access it,
+such as WebRTC <xref target="RFC8825"></xref> or SIP <xref target="RFC3261"></xref>.
+To maintain the privacy of the media with respect to the media forwarder, the
+clients could further encrypt the media using keying material only to clients, for
+example using WebRTC Insertable Streams.</t>
+</section>
+
+<section anchor="administrative-setup-of-federation"><name>Administrative setup of federation</name>
+<t>(ex: agreement on certificates, contact information, abuse policies).
+TBC.</t>
+</section>
+
+<section anchor="authorization-features"><name>Authorization features</name>
+<t>Is it necessary to standardize IM application authorization features such as
+moderation roles?</t>
+</section>
+</section>
+
+<section anchor="iana-considerations"><name>IANA Considerations</name>
+<t>This document requires no action of IANA.</t>
+</section>
+
+<section anchor="security-consideration"><name>Security Consideration</name>
+<t>TBC.</t>
+</section>
+
+</middle>
+
+<back>
+<references><name>Normative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.barnes-mimi-identity-arch.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.mahy-mimi-content.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.mahy-mimi-identity.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3861.xml"/>
+</references>
+<references><name>Informative References</name>
+<reference anchor="DoubleRatchet" target="https://signal.org/docs/specifications/doubleratchet/">
+  <front>
+    <title>The Double Ratchet Algorithm</title>
+    <author fullname="Trevor Perrin">
+      <organization>Signal</organization>
+    </author>
+    <author fullname="Moxie Marlinspike">
+      <organization>Signal</organization>
+    </author>
+    <date year="2016" month="November" day="20"></date>
+  </front>
+</reference>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.ietf-mls-architecture.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.ietf-mls-federation.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.ietf-mls-protocol.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.mahy-mls-content-adv.xml"/>
+<reference anchor="OTR" target="https://otr.cypherpunks.ca/otr-wpes.pdf">
+  <front>
+    <title>Off-the-Record Communication, or, Why Not To Use PGP</title>
+    <author fullname="Nikita Borisov">
+      <organization>UC Berkeley</organization>
+    </author>
+    <author fullname="Ian Goldberg">
+      <organization></organization>
+    </author>
+    <author fullname="Eric Brewer">
+      <organization>UC Berkeley</organization>
+    </author>
+    <date year="2004" month="October" day="28"></date>
+  </front>
+</reference>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2046.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3156.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3261.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3860.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3862.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5764.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8551.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8825.xml"/>
+<reference anchor="X3DH" target="https://signal.org/docs/specifications/x3dh/">
+  <front>
+    <title>The X3DH Key Agreement Protocol</title>
+    <author fullname="Moxie Marlinspike">
+      <organization>Signal</organization>
+    </author>
+    <author fullname="Trevor Perrin">
+      <organization>Signal</organization>
+    </author>
+    <date year="2016" month="November" day="4"></date>
+  </front>
+</reference>
+</references>
+
+</back>
+
+</rfc>
