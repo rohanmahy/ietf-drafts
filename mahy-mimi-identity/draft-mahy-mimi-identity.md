@@ -10,7 +10,7 @@ diagram = true
 [seriesInfo]
 status = "informational"
 name = "Internet-Draft"
-value = "draft-mahy-mimi-identity-00"
+value = "draft-mahy-mimi-identity-01"
 stream = "IETF"
 
 [[author]]
@@ -54,11 +54,13 @@ conversations. This problem is exacerbated when these systems federate or try to
 interoperate.
 
 While some single vendor solutions exist, clearly an interoperable mechanism
-for IM identity is needed. 
+for IM identity is needed. This document builds on the roles described in
+[@?I-D.barnes-mimi-identity-arch].
 First this document attempts to articulate a clear description and semantics
 of different identifiers used in IM systems. Next the document provides an
 example of how to represent those identifiers in a common way. Then the document
-discusses different trust approaches. Finally the document surveys various
+discusses different trust approaches. 
+Finally the document surveys various
 cryptographic methods of making and verifying assertions about these
 identifiers. 
 
@@ -126,7 +128,7 @@ different across protocols and vendors.
 | ----------- | ------------------- | ------------------------------------------------------- |
 | Jabber/XMPP | Fully-qualified JID | `juliet/balcony@example.com`                            |
 | SIP         | Contact Address     | `sip:juliet@[2001:db8::225:96ff:fe12:3456]`             |
-| Wire        | Qualified client ID | `0fd3e0dc-a2ff-4965-8873-509f0af0a75c:072b@example.com` |
+| Wire        | Qualified client ID | `0fd3e0dc-a2ff-4965-8873-509f0af0a75c/072b@example.com` |
 Table: some Client/Device identifier styles.
 
 Group Chat or Channel identifier (external):
@@ -573,6 +575,11 @@ does not use DIDs). The most significant problem with VCs are that
 there is no off-the-shelf mechanism for proof of possession of a private key, and no
 consensus to use VCs for user authentication (as opposed to using VCs to assert identity attributes).
 
+While the examples in this document are represented as JSON, including whitespace,
+the actual JSON encoding used for VC has no whitespace.
+
+The first example shows a fragment of the claims in a JWT-based VC proof,
+referencing the VCard ontology.
 
 ```
 {
@@ -599,9 +606,110 @@ consensus to use VCs for user authentication (as opposed to using VCs to assert 
   }
 }
 ```
-Figure: fragment of example claims payload of JWT-based VC 
-proof referencing the VCard ontology (WIP)
+Figure: fragment of example VC claims using VCard ontology
 
+In the next example, there is a Verifiable Presentation (VP) JOSE header
+and claims which contains two embedded VCs for the same holder. The JOSE
+header contains an actual Ed25519 public key. The corresponding key id
+could be expressed using the `kid` type with a 
+`urn:ietf:params:oauth:jwk-thumbprint:sha-256:` prefix, the actual fingerprint
+value would be `mJafqNxZWNAIkaDGPlNyhccFSAqnRjhyA3FJNm0f8I8`.
+
+The first VC contains a full name and a handle-style identifier. It is created
+by one issuer (for example an identity provider), and uses standard claims from
+OpenID Connect Core. The second VC contains a
+client or device identifier and is created by a different issuer (the IM service).
+
+Note that in the text version of this document, the `jws` values and 
+`verification Method` URLs are truncated.
+
+```
+{
+ "typ": "dpop+jwt",
+ "alg": "EdDSA",
+ "jwk": {
+  "typ": "OKP",
+  "crv": "Ed25519",
+  "x": "6UnHNcJ_iFCkToj9ZabfFgFTI1LPoWo0ZAdv96EyaEw"
+ }
+}
+.
+{
+ "@context": [
+   "https://www.w3.org/2018/credentials/v1"
+ ],
+ "type": [
+   "VerifiablePresentation"
+ ],
+ "verifiableCredential": [
+    {
+     "@context": [
+       "https://www.w3.org/2018/credentials/v1",
+       "https://openid.net/2014/openid-connect-core/v1",
+     ],
+     "id": "https://idp.example.com/credentials/1872",
+     "type": [
+       "VerifiableCredential",
+       "ImUserIdentityCredential"
+     ],
+     "issuer": {
+       "id": "dns:idp.example.com"
+     },
+     "issuanceDate": "2022-06-19T15:30:16Z",
+     "credentialSubject": {
+       "sub": "im:%40a_smith@example.com",
+       "name": "Smith, Alice (Allie)",
+       "preferred_username": "@a_smith@example.com",
+     },
+     "proof": {
+       "type": "Ed25519Signature2018",
+       "created": "2022-06-19T15:30:15Z",
+       "jws": "LedhVWaZvgklWAsPlGU4aEOuxPgXD16-aL5X7RNAyoXRvHPzYAqH8a3..Yot9dpKNuhWim2EwZUk-rmM876Xex_Con_HGseAqR6o",
+       "proofPurpose": "assertionMethod",
+       "verificationMethod": 
+         "https://idp.example.com/keys/Ed25519/sha256:wF6oONwUJSa3oi8vyBEG8S2CiZANGTN_8ZNXf4RYdyQ"
+     }
+    },
+    {
+     "@context": [
+       "https://www.w3.org/2018/credentials/v1",
+       "https://ietf.org/2022/oauth/MlsClientCredential/v1"
+     ],
+     "id": "https://im.example.com/credentials/9829381",
+     "type": [
+       "VerifiableCredential",
+       "MlsClientIdCredential"
+     ],
+     "issuer": {
+       "id": "dns:im.example.com"
+     },
+     "issuanceDate": "2022-09-08T19:23:24Z",
+     "credentialSubject": {
+       "sub": "im:SvPfLlwBQi-6oddVRrkqpw/04c7@example.com"
+     },
+     "proof": {
+       "type": "Ed25519Signature2018",
+       "created": "2021-03-19T15:30:15Z",
+       "jws": "N8xYGopY8_2wJYuhFX5QMuvMBjzHPJqp06w73UL53BBdhxP9QxtqxTAk..jZrTdfr4kMkCOYhLoFG2L7roGZFmDzVSecfzNwf36lk",
+       "proofPurpose": "assertionMethod",
+       "verificationMethod": "https://im.example.com/keys/Ed25519/sha256:uZx-Zx68PzlMsd2PgslEWBCF-BDyjMUdVDbZhnCZIls"
+     }
+    }
+ ],
+ "id": "ebc6f1c2",
+ "holder": "im:SvPfLlwBQi-6oddVRrkqpw/04c7@example.com",
+ "proof": {
+   "type": "Ed25519Signature2018",
+   "created": "2022-09-22T11:10:04Z",
+   "challenge": "Es6R6R4yI66_yw0d4ulfFQ",
+     "domain": "im:SvPfLlwBQi-6oddVRrkqpw/04c7@example.com",
+     "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..UIVpxg5CEOSrQtvpse2svUhgzM3iCZOvcJ-XjwNNd0o",
+     "proofPurpose": "authentication",
+     "verificationMethod": "urn:ietf:params:oauth:jwk-thumbprint:sha-256:mJafqNxZWNAIkaDGPlNyhccFSAqnRjhyA3FJNm0f8I8"
+ }
+}
+```
+Figure: Example VP with 2 embedded VCs
 
 ## Other possible mechanisms 
 Below are other mechanisms which were not investigated due to a lack of time.
@@ -627,21 +735,8 @@ TBC.
 # Acknowledgments
 
 The author wishes to thank Richard Barnes, Tom Leavy, Joel Alwen, Marta Mularczyk, 
-and Rifaat Shekh-Yusef for discussions about this topic. 
+Pieter Kasselman, and Rifaat Shekh-Yusef for discussions about this topic. 
 
-
-<reference anchor="I-D.mahy-mimi-problem-outline">
-   <front>
-      <title>More Instant Messaging Interoperability (MIMI) problem outline</title>
-      <author fullname="Rohan Mahy">
-	 <organization>Wire</organization>
-      </author>
-      <date month="July" day="11" year="2022" />
-   </front>
-   <seriesInfo name="Internet-Draft" value="draft-mahy-mimi-problem-outline-00" />
-   <format type="TXT" target="https://www.ietf.org/archive/id/draft-mahy-mimi-problem-outline-00.txt" />
-   <format type="HTML" target="https://www.ietf.org/archive/id/draft-mahy-mimi-problem-outline-00.html" />
-</reference>
 
 <reference anchor="OTR" target="https://otr.cypherpunks.ca/otr-wpes.pdf">
   <front>
