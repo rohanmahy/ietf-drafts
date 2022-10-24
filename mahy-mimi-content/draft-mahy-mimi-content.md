@@ -74,7 +74,7 @@ More Instant Messaging Interoperability (MIMI) problem outline
 
 This proposal assumes that MLS clients can advertise media types they support
 and that MLS clients can determine what media types are required to join a
-specific MLS group. Specifically, [@!I-D.mahy-mls-content-neg] defines
+specific MLS group. Specifically, [@!I-D.mahy-mls-content-adv] defines
 two MLS extensions which
 meet this requirement. It would allow implementations to define groups
 with different MIME type requirements and it would allow MLS clients to send
@@ -114,19 +114,15 @@ This proposal relies on URIs for naming and identifiers. All the example use
 the `im:` URI scheme (defined in [@!RFC3862]), but any instant messaging scheme
 could be used.
 
-## Negotiation of MIME types
+## Detection of suitable media types
 
 As most IM systems are proprietary, standalone systems, it is useful to allow
 clients to send and receive proprietary formats among themselves. Using the
-multipart/alternative MIME wrapper, clients can send a message using the basic
+multipart/alternative MIME wrapper (or the container syntax in Appendix A of
+this document), clients can send a message using the basic
 functionality described in this document AND a proprietary format for
 same-vendor clients simultaneously over the same group with end-to-end
 encryption.
-
-[@!I-D.mahy-mls-content-neg] contains the actual MLS extensions useful for negotiating
-MIME types. The profile in this document requires support for receiving message/cpim,
-text/plain, text/markdown, and multipart MIME. All other mime types (including
-some recommended in this profile) are optional.
 
 Example sending this profile and proprietary messaging protocol simultaneously.
 ~~~~~~~
@@ -149,7 +145,23 @@ Content-type: application/vnd.examplevendor-fancy-im-message
 --XcrSXMwuRwk9
 ~~~~~~~
 
+[@!I-D.mahy-mls-content-adv] contains the actual MLS extensions useful for
+advertising the relevant media types.  The profile in this document requires
+support for receiving: 
+
+* message/cpim
+* text/plain
+* text/markdown
+* multipart/mixed
+* multipart/alternative
+
+All other mime types (including some recommended in this profile) are optional.
+
 ## CPIM and MIME headers
+
+Note that while the **syntax** used in this document is based on CPIM, the
+semantics of these messages could be translated into any number of formats,
+for example JSON, XML, CBOR, etc. 
 
 We assume that an MLS group is already established and that either out-of-band
 or using the MLS protocol or MLS extensions that the following is known to every
@@ -159,8 +171,8 @@ member of the group:
 * The identity of any MLS client which sends an application message (via MLS).
 * The MLS group ID (via MLS)
 * The human readable name(s) of the MLS group, if any (out-of-band or extension).
-* Which MIME types are mandatory to implement (proposed extension).
-* For each member, the MIME types each supports (proposed extension).
+* Which media types are mandatory to implement (proposed extension).
+* For each member, the media types each supports (proposed extension).
 
 For all messages the message header equivalent of To (the MLS group) and
 Sender fields (MLS sender) is already
@@ -597,32 +609,6 @@ TBC
 
 
 {backmatter}
-
-<reference anchor="I-D.mahy-mimi-problem-outline">
-   <front>
-      <title>More Instant Messaging Interoperability (MIMI) problem outline</title>
-      <author fullname="Rohan Mahy">
-	 <organization>Wire</organization>
-      </author>
-      <date month="July" day="11" year="2022" />
-   </front>
-   <seriesInfo name="Internet-Draft" value="draft-mahy-mimi-problem-outline-00" />
-   <format type="TXT" target="https://www.ietf.org/archive/id/draft-mahy-mimi-problem-outline-00.txt" />
-   <format type="HTML" target="https://www.ietf.org/archive/id/draft-mahy-mimi-problem-outline-00.html" />
-</reference>
-
-<reference anchor="I-D.mahy-mimi-identity">
-   <front>
-      <title>More Instant Messaging Interoperability (MIMI) Identity Concepts</title>
-      <author fullname="Rohan Mahy">
-	 <organization>Wire</organization>
-      </author>
-      <date month="July" day="11" year="2022" />
-   </front>
-   <seriesInfo name="Internet-Draft" value="draft-mahy-mimi-identity-00" />
-   <format type="TXT" target="https://www.ietf.org/archive/id/draft-mahy-mimi-identity-00.txt" />
-   <format type="HTML" target="https://www.ietf.org/archive/id/draft-mahy-mimi-identity-00.html" />
-</reference>
 
 <reference anchor="OTR" target="https://otr.cypherpunks.ca/otr-wpes.pdf">
   <front>
