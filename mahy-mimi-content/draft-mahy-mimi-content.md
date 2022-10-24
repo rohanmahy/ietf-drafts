@@ -9,7 +9,7 @@ keyword = ["mimi","content","mls","mime"]
 [seriesInfo]
 status = "informational"
 name = "Internet-Draft"
-value = "draft-mahy-mimi-content-00"
+value = "draft-mahy-mimi-content-01"
 stream = "IETF"
 
 [[author]]
@@ -228,7 +228,7 @@ Right on! _Congratulations_ 'all!
 
 A reaction, uses the reaction Content-Disposition token defined in [@RFC9078].
 This Content-Disposition token indicates that the intended disposition of the
-ccontents of the message is a reaction.
+contents of the message is a reaction.
 
 The content in the sample message is a single Unicode heart character (U+2665).
 Discovering the range of characters each implementation could render as a
@@ -653,5 +653,76 @@ TBC
   </front>
 </reference>
 
+# TLS Presentation Language multipart container format
 
+In a heterogenous group of IM clients, it is often desirable to send more than one
+media type as alternatives, such that IM clients have a choice of which media
+type to render. For example, imagine an IM group containing a set of clients
+which support a common video format and a subset which only support animated GIFs.
+The sender could send a `multipart/alternative` [@?RFC2046] container containing
+both media types. Every client in the group chat could render something resembling the
+media sent.
+
+Likewise it is often desirable to send more than one media type intended to be
+rendered together as in (for example a rich text document with embedded images),
+which can be represented using the `multipart/mixed` [@?RFC2046] media type.
+
+Some implementors complain that the multipart types are unnatural to use inside a
+binary protocol which requires explicit lengths such as MLS
+[@?I-D.ietf-mls-protocol]. Concretely, an implementation has to scan through the
+entire content to construct a boundary token which is not contained in the content.
+
+While the author does not care about the specific syntax used, for comparison
+purposes presents a multipart container format using the TLS presentation language
+syntax used by the MLS protocol.
+
+Note that there is a minor semantic difference between multipart/alternative and
+the proposal below. In multipart/alternative, the parts are presented in
+preference order by the sender. The receiver is support to render the first type
+which it supports. This container includes an ordering flag. As well, even if the
+flag is ordered, it is up to the IETF community to decide if it is acceptable for
+the receiver to choose its "best" format to render among an ordered preference list
+provided by the sender, or if the receiver must respect the ordered preference of
+the sender.
+
+``` tls
+struct {
+    /* a valid "Language-tag" as defined in RFC 5646 */
+    opaque language_tag<1..52>;
+} LanguageTag;
+
+struct {
+  ContentType content_type;
+  LanguageTag content_languages<V>;
+  opaque<V> body;
+} Part;
+
+enum {
+  reserved(0),
+  multipart_container_v1(1),
+  (255)
+} MultipartVersion;
+
+enum {
+  reserved(0),
+  mixed(1),
+  alternative(2),
+  (255)
+} MultipartSemantics;
+
+enum {
+  reserved(0),
+  unordered(1),
+  ordered(2),
+  (255)
+} MultipartOrdering;
+
+struct {
+    uint8 container_version;
+    uint16 number_of_parts;
+    MultipartSemantics semantics;
+    MultipartOrdering ordering;
+    Part parts<V>;
+} MultipartContainer;
+```
 
