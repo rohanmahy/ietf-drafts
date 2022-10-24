@@ -9,7 +9,7 @@ keyword = ["mimi","immi"]
 [seriesInfo]
 status = "informational"
 name = "Internet-Draft"
-value = "draft-mahy-mimi-problem-outline-00"
+value = "draft-mahy-mimi-problem-outline-01"
 stream = "IETF"
 
 [[author]]
@@ -24,7 +24,7 @@ organization = "Wire"
 .# Abstract
 
 Instant Messaging interoperability requirements have changed dramatically since
-the IETF last activity in the space. This document presents an outline of problems
+the last IETF activity in the space. This document presents an outline of problems
 that need to be addressed to make possible interoperability of modern Instant
 Messaging systems. The goal of this problem outline is to point at more detailed
 drafts which spawn discussion and eventually spur the IETF standards process.
@@ -63,7 +63,7 @@ the major IM systems in almost non-existent.  It would be incredibly beneficial 
 provide interoperable best practices and solutions which IM vendors can incorporate
 into modern IM systems. Indeed, large customers and governments are already putting
 pressure on these IM vendors. The European Union's Digital Markets Act [DMA] is a
-recent dramatic example.
+recent motivating example.
 
 Instant Messaging interoperability requirements have changed dramatically since
 the IETF last activity in the space. This document presents an outline of problems
@@ -114,7 +114,8 @@ instant messaging service not to add and remove participants from their
 conversations. This problem is exacerbated when these systems federate or try to
 interoperate.
 
-This problem space is explored in [@!I-D.mahy-mimi-identity].
+This problem space is explored in [@!I-D.mahy-mimi-identity], and a specific
+architecture is described in [@!I-D.barnes-mimi-identity-arch].
 
 ## Discovery
 
@@ -138,7 +139,8 @@ One vendor mentioned a strawperson outline for user discovery:
 	- searcher identity and proof of identity (optional)
 	- rate limiting
 
-
+The privacy implications of user discovery are of the utmost importance, and may
+differ widely depending on the specific messaging application.
 
 ## Profiles of security protocols to facilitate interoperable end-to-end encryption
 
@@ -164,7 +166,7 @@ key agreement.  However the initial setup of encryption sessions among these app
 are often incompatible. 
 
 Most implementations of Double Ratchet use a fixed ciphersuite and have no 
-content negotiation mechanism.
+content negotiation or advertisement mechanism.
 
 ### Instant Messaging using Messaging Layer Security
 
@@ -183,10 +185,30 @@ More documentation on the use of MLS in the Instant Messaging Context:
 
 ## Content negotiation
 
-Content negotiation is protocol specific. In MLS, the requirements for content
-negotiation are discussed in the MLS architecture document [@?I-D.ietf-mls-architecture]
-and a specific content negotiation mechanism that can be used within MLS is described
-in [@?I-D.mahy-mls-content-neg].
+Protocol independent content negotiation is discussed in [?RFC2703]. In this
+framework, content negotiation covers these elements:
+
+* describing the data resource to be transmitted
+* expressing sender capabilities
+* expressing receiver capabilities
+* a protocol to exchange capabilities
+
+In end-to-end encrypted group messaging, the problem is slightly different;
+an intermediary should not be able to read the sender's content, let alone
+change the format of the message for different recipients. Furthermore, in
+MLS a message in a group is encrypted once for all the recipients in the
+group, some of whom may be offline and receive the message later. The sender
+has one opportunity to craft an encrypted message which can be processed by all
+the members of an MLS group. Rather than have a protocol to exchange capabilities,
+MLS content advertising insures that each member knows any media types required
+in the group, knows the content capabilities of every group member at all times,
+and knows the media type of each received message.  Note that the message could
+be be a container type such as a multipart [@?RFC2046] expressing different
+alternative expressions of the same content in a single message.
+
+The requirements for content negotiation are discussed in the MLS architecture
+document [@?I-D.ietf-mls-architecture] and a specific content advertisement
+mechanism for MLS is described in [@?I-D.mahy-mls-content-adv].
 
 ## Content format interoperability
 
@@ -212,6 +234,24 @@ extensions to be delivered in parallel to the same users is described in
 [@!I-D.mahy-mimi-content]. It discusses all of the features above except for
 calling and conferencing.
 
+## Calling and Conferencing
+
+Many IM systems offer 1:1 calling and/or conferencing of real-time audio and
+video. The majority of these systems use a exchange a session description offer
+and answer to setup sessions of media transmitted using DTLS-SRTP [@?RFC5764],
+including the fingerprint of the DTLS-SRTP self-signed certificate. These
+messages are typically end-to-end encrypted. During 1:1 calls, the session
+descriptions (an offer and an answer) are shared for one or more DTLS-SRTP
+flows which carry the actual media.
+
+For conferences, a client typically contacts a conferencing system which sets
+up a session between the client and the media forwarder. The client needs to
+have the URI of the specific conference and support the protocol used to access it,
+such as WebRTC [@?RFC8825] or SIP [@?RFC3261].
+To maintain the privacy of the media with respect to the media forwarder, the
+clients could further encrypt the media using keying material only to clients, for
+example using WebRTC Insertable Streams.
+
 
 ## Administrative setup of federation
 
@@ -232,19 +272,6 @@ This document requires no action of IANA.
 TBC.
 
 {backmatter}
-
-<reference anchor="I-D.mahy-mimi-identity">
-   <front>
-      <title>More Instant Messaging Interoperability (MIMI) Identity Concepts</title>
-      <author fullname="Rohan Mahy">
-	 <organization>Wire</organization>
-      </author>
-      <date month="July" day="11" year="2022" />
-   </front>
-   <seriesInfo name="Internet-Draft" value="draft-mahy-mimi-identity-00" />
-   <format type="TXT" target="https://www.ietf.org/archive/id/draft-mahy-mimi-identity-00.txt" />
-   <format type="HTML" target="https://www.ietf.org/archive/id/draft-mahy-mimi-identity-00.html" />
-</reference>
 
 <reference anchor="OTR" target="https://otr.cypherpunks.ca/otr-wpes.pdf">
   <front>
