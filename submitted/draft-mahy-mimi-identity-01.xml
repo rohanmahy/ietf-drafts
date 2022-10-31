@@ -1,0 +1,865 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
+<rfc version="3" ipr="trust200902" docName="draft-mahy-mimi-identity-01" submissionType="IETF" category="info" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" consensus="true">
+
+<front>
+<title abbrev="MIMI Identity">More Instant Messaging Interoperability (MIMI) Identity Concepts</title><seriesInfo value="draft-mahy-mimi-identity-01" stream="IETF" status="informational" name="Internet-Draft"></seriesInfo>
+<author initials="R." surname="Mahy" fullname="Rohan Mahy"><organization>Wire</organization><address><postal><street></street>
+</postal><email>rohan.mahy@wire.com</email>
+</address></author><date/>
+<area>art</area>
+<workgroup>MIMI BoF</workgroup>
+<keyword>mimi</keyword>
+<keyword>immi</keyword>
+<keyword>identity</keyword>
+
+<abstract>
+<t>This document discusses concepts in instant messaging identity interoperability
+when using end-to-end encryption, for example with the MLS
+(Message Layer Security) Protocol.  The goal is to explore the problem space in
+preparation for framework and requirements documents.</t>
+</abstract>
+
+</front>
+
+<middle>
+
+<section anchor="introduction"><name>Introduction</name>
+<t>The IETF began standardization work on interoperable Instant Messaging in the late 1990s,
+but since that period, the typical feature set of these systems has expanded widely
+and was largely driven by the industry without much standardization or interoperability.
+The MIMI (More Instant Messaging Interop) problem outline <xref target="I-D.mahy-mimi-problem-outline"></xref>
+identifies areas where more work is needed to build interoperable IM systems.</t>
+<t>The largest and most widely deployed Instant Messaging (IM) systems support
+end-to-end message encryption using a variant of the Double
+Ratchet protocol <xref target="DoubleRatchet"></xref> popularized by Signal and the companion X3DH <xref target="X3DH"></xref>
+key agreement protocol. Many vendors are also keen to support the Message Layer Security
+(MLS) protocol <xref target="I-D.ietf-mls-protocol"></xref> and architecture <xref target="I-D.ietf-mls-architecture"></xref>.
+These protocols provide confidentiality
+of sessions (with Double Ratchet) and groups (with MLS) once the participants in
+a conversation have been identified. However, the current state of most systems
+require the end user to manually verify key fingerprints or blindly trust their
+instant messaging service not to add and remove participants from their
+conversations. This problem is exacerbated when these systems federate or try to
+interoperate.</t>
+<t>While some single vendor solutions exist, clearly an interoperable mechanism
+for IM identity is needed. This document builds on the roles described in
+<xref target="I-D.barnes-mimi-identity-arch"></xref>.
+First this document attempts to articulate a clear description and semantics
+of different identifiers used in IM systems. Next the document provides an
+example of how to represent those identifiers in a common way. Then the document
+discusses different trust approaches.
+Finally the document surveys various
+cryptographic methods of making and verifying assertions about these
+identifiers.</t>
+<t>Arguably, as with email, the success of XMPP <xref target="RFC6120"></xref> was partially due to
+the ease of communicating among XMPP users in different domains with
+different XMPP servers, and a single
+standardized address format for all XMPP users.</t>
+<t>The goal of this document is to explore the problem space, so that the IETF community
+can write a consensus requirements document and framework.</t>
+</section>
+
+<section anchor="types-of-identifiers"><name>Types of Identifiers</name>
+<t>IM systems have a number of types of identifiers. Few (or perhaps no) systems use
+every type of identifier described here. Not every configuration of the same
+application necessarily use the same list of identifiers.</t>
+
+<dl spacing="compact">
+<dt>Domain identifier:</dt>
+<dd>A bare domain name is often used for discovery of a specific IM service such as
+<tt>example.com</tt> or <tt>im.example.com</tt>. Many proprietary IM systems operate in a single
+domain and have no concept of domains or federation.</dd>
+<dt>Handle identifier:</dt>
+<dd>A handle is an identifier which represents a user or service. A handle is usually
+intended for external sharing (for example it could appear on or in a paper or
+electronic business card).
+IM systems could have handles which are unscoped (don't contain a domain)
+or scoped (contain a domain).
+Unscoped handles are often prefixed with a commercial at-sign (&quot;@&quot;).
+Handles in some services are mutable. For example, <tt>@alice_smith</tt> could
+become <tt>@alice_jones</tt> or <tt>@alex_smith</tt> after change of marital status or
+gender transition.</dd>
+</dl>
+<table><name>some Handle identifier styles
+</name>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Identifier Address</th>
+<th>Example</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Jabber/XMPP</td>
+<td>Bare JID</td>
+<td><tt>juliet@example.com</tt></td>
+</tr>
+
+<tr>
+<td>SIP</td>
+<td>Address of Record (AOR)</td>
+<td><tt>sip:juliet@example.com</tt></td>
+</tr>
+
+<tr>
+<td>IRC</td>
+<td>nick</td>
+<td><tt>@juliet</tt></td>
+</tr>
+
+<tr>
+<td>Generic example</td>
+<td>&quot;unscoped handle&quot;</td>
+<td><tt>@juliet</tt></td>
+</tr>
+
+<tr>
+<td>Generic example</td>
+<td>&quot;scoped handle&quot;</td>
+<td><tt>@juliet@example.com</tt></td>
+</tr>
+
+<tr>
+<td>Email style</td>
+<td>Mailbox address</td>
+<td><tt>juliet@example.com</tt></td>
+</tr>
+</tbody>
+</table>
+<dl spacing="compact">
+<dt>User or account identifier:</dt>
+<dd>Many systems have an internal representation of a user, service, or account separate
+from the handle. This is especially useful when the handle is allowed to change.
+Unlike the handle, this identifier typically cannot change.  For example the user
+identifier could be a UUID or a similar construction. In IRC, a user identifier is
+prefixed with a &quot;!&quot; character (example: <tt>!jcapulet1583@example.com</tt> for the &quot;nick&quot;
+<tt>@juliet</tt>).</dd>
+<dt>Client or Device identifier:</dt>
+<dd>Most commercial instant messaging systems allow a single user to have multiple
+devices at the same time, for example a desktop computer and a phone. Usually, each
+client instance of the user is represented with a separate identifier with separate
+keys. Typically these identifiers are internal and not visible to the end-user (XMPP
+fully qualified JIDs are a rare exception). The client or device identifier is often
+based on a UUID, a persistent long-term unique identifier like an IMEI or MAC address,
+a sequence number assigned by the IM service domain, or a combination. In some cases
+the identifier may contain the internal user identifier.  These identifiers look quite
+different across protocols and vendors.</dd>
+</dl>
+<table><name>some Client/Device identifier styles.
+</name>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Identifier Address</th>
+<th>Example</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Jabber/XMPP</td>
+<td>Fully-qualified JID</td>
+<td><tt>juliet/balcony@example.com</tt></td>
+</tr>
+
+<tr>
+<td>SIP</td>
+<td>Contact Address</td>
+<td><tt>sip:juliet@[2001:db8::225:96ff:fe12:3456]</tt></td>
+</tr>
+
+<tr>
+<td>Wire</td>
+<td>Qualified client ID</td>
+<td><tt>0fd3e0dc-a2ff-4965-8873-509f0af0a75c/072b@example.com</tt></td>
+</tr>
+</tbody>
+</table>
+<dl spacing="compact">
+<dt>Group Chat or Channel identifier (external):</dt>
+<dd>All or nearly all instant messaging systems have the concept of named groups
+or channels which support more than 2 members and whose membership can change over time.
+Many IM systems support an external identifier for these groups and allows them to
+be addressed. In IRC and many other systems, they are identified with a &quot;#&quot;
+(hash-mark) prefix. The proliferation of hashtags on social media makes this
+convention less common on newer systems.</dd>
+<dt>Group, Conversation, or Session identifiers (internal):</dt>
+<dd>Most IM protocols use an internal representation for a group or 1:1 chat.
+In MLS this is called the <tt>group_id</tt>. The Wire protocol uses the term
+<tt>qualified conversation ID</tt> to refer to a group internally across domains.
+Among implementations of the Double Ratchet family of protocols a unidirectional
+sequence of messages from one client to another is referred to as a session, and
+often has an associated session identifier.</dd>
+<dt>Team or Workspace identifier:</dt>
+<dd>A less common type of identifier among IM systems is used to describe a set of
+users or accounts. This is described variously as a team, workspace, or tenant.</dd>
+</dl>
+<t>One user often has multiple clients (for example a mobile and a desktop client).
+A handle usually refers to a single user or rarely it may redirect to multiple users.
+In some systems, the user identifier is a handle. In other systems the user
+identifier is an internal representation, for example a UUID. Handles may be
+changed/renamed, but hopefully internal user identifiers do not. Likewise,
+group conversation identifiers could be internal or external
+representations, whereas group names or channel names are often external
+friendly representations.</t>
+<t>It is easy to imagine a loose hierarchy between these identifiers
+(domain to user to device), but hard to agree on a specific fixed structure.
+In some systems, the group chat or session itself has
+a position in the hierarchy underneath the domain, the user, or the device.</t>
+<t>As described in the next section,
+the author proposes using URIs as a container for interoperable IM identifiers.
+All the examples use
+the <tt>im:</tt> URI scheme (defined in <xref target="RFC3862"></xref>), but any instant messaging scheme
+should be acceptable as long as the comparison and validation rules are clear.</t>
+</section>
+
+<section anchor="representation-of-identifiers-using-uris"><name>Representation of identifiers using URIs</name>
+<t>Most if not all of the identifiers described in the previous section could be
+represented as URIs. While individual instant messaging protocol-specific URI
+schemes may not have been specified with this use of URIs in mind, the <tt>im:</tt>
+URI scheme should be flexible enough to represent all of or any needed subset of the
+previously discussed identifiers.</t>
+<t>For example, the XMPP protocol can represent a domain, a handle (bare JID),
+or a device (fully qualified JID).
+Unfortunately its xmpp: URI scheme was only designed to represent handles and domains,
+but the <tt>im:</tt> URI scheme can represent all XMPP identifiers:</t>
+
+<ul spacing="compact">
+<li>im:xmpp=example.com  (domain only)</li>
+<li>im:xmpp=juliet@example.com  (bare JID - handle)</li>
+<li>im:xmpp=juliet/balcony@example.com  (fully qualified JID - client/device)</li>
+</ul>
+<t>Likewise the IRC protocol can represent domain, handle (nick), user (account),
+and channel. The examples below represent a domain, a nick, a user, a local channel,
+abd three ways to specify the projectX channel.</t>
+
+<ul spacing="compact">
+<li>im:irc=irc.example.com</li>
+<li>im:irc=irc.example.com/juliet,isuser</li>
+<li>im:irc=irc.example.com/juliet%21jcapulet1583%40example.com,isuser</li>
+<li>im:irc=irc.example.com/%26local_announcements_channel</li>
+<li>im:irc=irc.example.com/#projectX</li>
+<li>im:irc=irc.example.com/%23projectX</li>
+<li>im:irc=irc.example.com/%23projectX</li>
+<li>im:irc=irc.example.com/%23projectX,ischannel</li>
+</ul>
+<t>Imagine a hypothetical WXYZ IM protocol with support for all our identifiers.
+These could be represented unambiguously using the conventions below, or with an
+explicit parameter (ex: <tt>;id-type=</tt>):</t>
+<table><name>examples of all identifier types in the fictional WXYZ IM protocol
+</name>
+<thead>
+<tr>
+<th>id type</th>
+<th>unscoped form</th>
+<th>domain scoped form</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>domain</td>
+<td>-</td>
+<td>example.com</td>
+</tr>
+
+<tr>
+<td>handle</td>
+<td>@alice</td>
+<td>@alice@example.com</td>
+</tr>
+
+<tr>
+<td>user</td>
+<td>BFuVxW5BfJc8R7Qw</td>
+<td>BFuVxW5BfJc8R7Qw@example.com</td>
+</tr>
+
+<tr>
+<td>device</td>
+<td>BFuVxW5BfJc8R7Qw/072b</td>
+<td>BFuVxW5BfJc8R7Qw/072b@example.com</td>
+</tr>
+
+<tr>
+<td>channel</td>
+<td>#projectX</td>
+<td>#projectX@example.com</td>
+</tr>
+
+<tr>
+<td>team</td>
+<td>##engineering</td>
+<td>##engineering@example.com</td>
+</tr>
+
+<tr>
+<td>channel</td>
+<td>##engineering/projX</td>
+<td>##engineering/projX@example.com</td>
+</tr>
+
+<tr>
+<td>group id</td>
+<td>$TII9t5viBrXiXc</td>
+<td>$TII9t5viBrXiXc@example.com</td>
+</tr>
+</tbody>
+</table><t>Now imagine that WXYZ reserved the wxyz: URI scheme. The example below shows how
+almost any reasonable protocol-specific identifier scheme can be represented as an <tt>im:</tt>
+URI.</t>
+<figure><name>mapping the identifiers in the fictional WXYZ format into an im: URI
+</name>
+<artwork>wxyz:example.com
+wxyz:%40alice@example.com
+wxyz:BFuVxW5BfqaMEfJDc8R7Qw/072b@example.com
+wxyz:#projectX@example.com
+wxyz:##engineering@example.com
+wxyz:$TII9t5viBrXiX@example.com
+
+im:wxyz=example.com
+im:wxyz=%40alice@example.com
+im:wxyz=BFuVxW5BfqaMEfJDc8R7Qw/072b@example.com
+im:wxyz=#projectX@example.com
+im:wxyz=##engineering@example.com
+im:wxyz=$TII9t5viBrXiX@example.com
+</artwork>
+</figure>
+<t>Note that if there is no domain, an <tt>im:</tt> URI, or another scheme, could use
+<tt>local.invalid</tt> in place of a resolvable domain name.</t>
+
+<artwork>im:wxyz=%40alice@local.invalid
+</artwork>
+</section>
+
+<section anchor="different-root-of-trust-approaches"><name>Different Root of Trust Approaches</name>
+<t>Different IM applications and different users of these applications may have
+different trust needs. The following subsections describe three specific trust
+models for example purposes. Note that the descriptions in this section use certificates
+in their examples, but nothing in this section should preclude using a different
+technology which provides similar assertions.</t>
+
+<section anchor="centralized-credential-hierarchy"><name>Centralized credential hierarchy</name>
+<t>In this environment, end-user devices trust a centralized authority operating on
+behalf of their domain (for example, a Certificate Authority), that is trusted by
+all the other clients in that domain (and can be trusted by federated domains). The
+centralized authority could easily be associated with a traditional Identity
+Provider (IdP). This is a popular trust model for companies running services for
+their own employees and contractors. This is also popular with governments providing
+services to their employees and contractors or to residents or citizens for whom
+they provide services.</t>
+<t>For example XYZ Corporation could make an assertion that &quot;I represent XYZ
+Corporation and this user demonstrated she is Alice Smith of the Engineering
+department of XYZ Corporation.&quot;</t>
+<t>In this model, a Certificate Authority (CA) run by or on behalf of the domain generates
+certificates for one or more of the identifier types described previously. The
+specifics of the assertions are very important for interoperability. Even within
+this centralized credential hierarchy model, there are at least three ways to make
+assertions about different types of IM identifiers with certificates:</t>
+
+<dl spacing="compact">
+<dt>Example 1 (Separate Certs):</dt>
+<dd>The CA generates one certificate for a user Alice which is used to sign Alice's profile.
+The CA also generates a separate certificate for Alice's desktop client and a third
+for her phone client. The private key in each client certificate is used to sign MLS KeyPackages or
+Double Ratchet-style prekeys.</dd>
+<dt>Example 2 (Single Combined Cert):</dt>
+<dd>The CA generates a single certificate per client which covers both Alice's handle and
+her client identifier in the same certificate. The private key in each of these certificates is used to
+sign MLS KeyPackages or Double Ratchet-style prekeys. Note that there is no separate
+key pair used to refer to the user distinct from a device. All the legitimate device
+key pairs would be able to sign on behalf of the user.</dd>
+<dt>Example 3 (Cascading Certs):</dt>
+<dd>The CA generates a single user certificate for Alice's handle and indicates that the
+user certificate can issue its own certificates.
+The user certificate then generates one certificate for Alice's desktop client and
+another certificate for Alice's phone client.
+The private key in each client certificate is used to sign MLS KeyPackages or
+Double Ratchet-style prekeys.</dd>
+</dl>
+<t>What is important in all these examples is that other clients involved in a session or
+group chat can validate the relevant credentials of the other participants in the
+session or group chat. Clients would need to be able to configure the relevant
+trust roots and walk any hierarchy unambiguously.</t>
+<t>When using certificates, this could include associating an Issuer URI in
+the issuerAltName with one of the URIs in the subjectAltName of another cert.
+Other mechanisms have analogous concepts.</t>
+<t>Regardless of the specific implementation, this model features a strong hierarchy.</t>
+<t>The advantage of this approach is to take advantage of a strong hierarchy which is
+already in use at an organization, especially if the organization is using an
+Identity Provider (IdP) for most of its services.  Even if the IM system is
+compromised, the presence of client without the correct end-to-end identity would
+be detected immediately.</t>
+<t>The disadvantage of this approach is that if the CA colludes with a malicious IM
+system or both are compromised, an attacker or malicious IM system
+can easily insert a rogue client which would be as
+trusted as a legitimate client.</t>
+</section>
+
+<section anchor="web-of-trust"><name>Web of Trust</name>
+<t>In some communities, it may be appropriate to make assertions about IM
+identity by relying on a web of trust. The following specific example of this general
+method is used by the OMEMO community presented by <xref target="Schaub"></xref> and proposed in <xref target="Matrix1756"></xref>.
+This document does not
+take any position on the specifics of the proposal, but uses it to illustrate
+a concrete implementation of a web of trust involving IM identifiers.</t>
+<t>The example uses a web of trust with cross signing as follows:</t>
+
+<ul spacing="compact">
+<li>Each user (Alice and Bob) has a master key.</li>
+<li><t>Alice's master key signs exactly two keys:</t>
+
+<ul spacing="compact">
+<li>Alice's device-signing key (which then signs her own device keys), and</li>
+<li>Alice's user-signing key (which can sign the master key of other users).</li>
+</ul></li>
+</ul>
+<t>The advantage of this approach is that if Alice's and Bob's keys, implementations,
+and devices are not compromised,
+there is no way the infrastructure can forge a key for Alice or Bob and insert
+an eavesdropper or active attacker.
+The disadvantages of this approach are that this requires Alice's
+device-signing key to be available any time
+Alice wants to add a new device, and Alice's user-signing key to be available
+anytime she wants to add a new user to her web of trust. This could either make
+those operations inconvenient and/or unnecessarily expose either or both of those
+keys.</t>
+<figure><name>Alice and Bob cross sign each other's master keys
+</name>
+<sourcecode type="ascii-art">          Alice          :          Bob
+        +--------+       :       +--------+
+        | master |&lt;---\  /------&gt;| master |
+        +--------+     \/:       +--------+
+         /    \       / \___      /     \
+        /      \     /   :  \    /       \
++---------+  +---------+  +---------+  +---------+
+| device  |  |  user   | :|  user   |  | device  |
+| signing |  | signing | :| signing |  | signing |
++---------+  +---------+ :+---------+  +---------+
+   /     \               :              /     \
++----+  +----+           :          +----+  +----+
+| A1 |  | A2 |           :          | B1 |  | B2 |
++----+  +----+           :          +----+  +----+
+</sourcecode>
+</figure>
+<t>A detailed architecture for Web of Trust key infrastructure which is not specific to
+Instant Messaging systems is the Mathematical Mesh <xref target="I-D.hallambaker-mesh-architecture"></xref>.</t>
+</section>
+
+<section anchor="well-known-service-cross-signing"><name>Well-known service cross signing</name>
+<t>In this trust model, a user with several services places a cross signature for all
+their services at a well known location on each of those services (for example a
+personal web site .well-known page, an IM profile, the profile page on an open source code
+repository, a social media About page, a picture sharing service profile page,
+a professional interpersonal-networking site contact page, and a dating application profile).
+This concept was perhaps first implemented for non-technical users by Keybase.
+The user of this scheme likely expects that at any given moment
+there is a risk that one of these services is compromised or controlled by a
+malicious entity, but expects the likelihood of all or most of their services being
+compromised simultaneously is very low.</t>
+<t>The advantage of this approach is that it does not rely on anyone but the user
+herself. This disadvantage is that if an attacker is able to delete or forge cross
+signatures on a substantial number of the services, the forged assertions would looks as
+legitimate as the authentic assertions (or more convincing).</t>
+</section>
+
+<section anchor="combining-approaches"><name>Combining approaches</name>
+<t>These different trust approaches could be combined, however the verification rules
+become more complicated. Among other problems, implementers need to decide what happens
+if two different trust methods come to incompatible conclusions. For example, what
+should the application do if web of trust certificates indicate that a client or
+user should be trusted, but a centralized hierarchy indicates a client should not be,
+or vice versa.</t>
+</section>
+</section>
+
+<section anchor="cryptographic-mechanisms-to-make-assertions-about-im-identifiers"><name>Cryptographic mechanisms to make assertions about IM identifiers</name>
+
+<section anchor="x-509-certificates"><name>X.509 Certificates</name>
+<t>X.509 certificates are a mature technology for making assertions about identifiers.
+The supported assertions and identifier formats used in certificates are
+somewhat archaic, inflexible, and pedantic, but well understood. The semantics
+are always that an Issuer asserts that a Subject has control of a specific
+public key key pair.  A handful of additional attributes can be added as X.509
+certificate extensions, although adding new extensions is laborious and
+time consuming. In practice new extensions are only added to facilitate the
+internals of managing the lifetime, validity, and applicability of certificates.
+X.509 extensions are not appropriate for arbitrary assertions or claims about the
+Subject.</t>
+<t>The Subject field
+contains a Distinguished Name, whose Common Name (CN) field can contain free form text.
+The subjectAltName can contain multiple other identifiers for the Subject
+with types such as a URI, email address, DNS domain names, or
+Distinguished Name. The rules about which combinations of extensions are valid
+are defined in the Internet certificate profile described in <xref target="RFC5280"></xref>. As noted
+in a previous section of this document, URIs are a natural container for holding
+instant messaging identifiers. Implementations need to be careful to insure that the
+correct semantics are applied to a URI, as they may be referring to different
+objects (ex: a handle versus a client identifier). There is a corresponding
+issuerAltName field as well.</t>
+<t>Certificates are already supported in MLS as a standard credential type which can
+be included in MLS LeafNodes and KeyPackages.
+[In the X3DH key agreement protocol (used with Double Ratchet), the first message
+in a session between a pair of clients can contain an optional
+certificate, but this is not standardized.]
+Arguably the biggest drawback to using X.509 certificates is that administratively
+it can be difficult to obtain certificates for entities that can also generate
+certificates---specifically to issue a certificate with the standard extension
+<tt>basicContraints=CA:TRUE</tt>.]</t>
+<figure><name>mocked up IM client certificate with both client id and handle
+</name>
+<artwork>Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            04:dc:7a:4b:89:22:98:32:35:1f:91:84:f7:e9:4e:5d:24:c4
+        Signature Algorithm: ED25519
+        Issuer: O = example.com, CN = acme.example.com
+        Validity
+            Not Before: Jul  6 06:41:50 2022 GMT
+            Not After : Oct  4 06:41:49 2022 GMT
+        Subject: O = example.com, CN = Alice M. Smith
+        Subject Public Key Info:
+            Public Key Algorithm: ED25519
+                ED25519 Public-Key:
+                pub:
+                    a0:6b:14:1e:a8:04:2a:09:6b:62:89:48:7c:da:5c:
+                    68:73:b9:2a:8e:65:50:f9:15:70:bd:91:d7:86:52:
+                    1e:4f
+        X509v3 extensions:
+            X509v3 Key Usage: critical
+                Digital Signature, Key Agreement
+            X509v3 Extended Key Usage: 
+                TLS Web Client Authentication
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Subject Key Identifier: 
+                4C:EA:12:32:79:03:F6:4F:47:29:37:5F:96:BB:E1:91:5E:FC
+            X509v3 Authority Key Identifier: 
+                14:2E:B3:17:B7:58:56:CB:AE:50:09:40:E6:1F:AF:9D:8B:14
+            Authority Information Access: 
+                OCSP - URI:http://oscp.acme.example.com
+                CA Issuers - URI:http://acme.example.com/
+            X509v3 Subject Alternative Name: critical
+                URI:im:SvPfLlwBQi-6oddVRrkqpw/04c7@example.com, 
+                URI:im:%40alice.smith@example.com
+            X509v3 Certificate Policies: 
+                [etc....]
+                
+    Signature Algorithm: ED25519
+    Signature Value:
+        da:21:49:cc:7a:ac:ed:7b:27:59:30:81:d9:94:c0:d7:86:e7:
+        db:b2:c9:ed:72:47:19:01:aa:2a:7f:24:d6:ce:2f:4f:9d:fe:
+        ab:8b:e2:0e:43:1b:62:b1:1d:12:3f:78:a2:bf:cc:7b:52:ef:
+        df:c1:94:5a:3f:ca:a1:f6:88:02
+</artwork>
+</figure>
+<t>If implementing cascading certificates, the Issuer might be a expressed as a URI in the
+issuerAltName extension.</t>
+<figure><name>mocked up IM client certificate issued by the domain for the handle URI as
+Subject. Then another certificate issued by the handle URI for the device URI as its
+Subject.
+</name>
+<artwork>TBC
+</artwork>
+</figure>
+</section>
+
+<section anchor="json-web-tokens-jwt-with-demonstrating-proof-of-posession-dpop"><name>JSON Web Tokens (JWT) with Demonstrating Proof of Posession (DPoP)</name>
+<t>JSON Web Signing (JWS) <xref target="RFC7515"></xref> and JSON Web Tokens (JWT) <xref target="RFC7519"></xref> are toolkits for
+making a variety of cryptographic claims. (CBOR Web Tokens <xref target="RFC8392"></xref> are semantically
+equivalent to JSON Web Tokens.)
+JWT is an appealing option for carrying IM identifiers and assertions, as the
+container type is flexible and the format is easy to implement. Unfortunately the
+semantics for validating identifiers are not as rigorously specified as for
+certificates at the time of this writing, and require
+additional specification work.</t>
+<t>The JWT Demonstrating Proof of Possession (DPoP) specification <xref target="I-D.ietf-oauth-dpop"></xref>
+adds the ability
+to make claims which involve proof of possession of a (typically private) key, and
+to share those claims with third parties. The owner of a the key generates a <tt>proof</tt>
+which is used to fetch an <tt>access token</tt> which can then be verified by a third party.
+JWT DPoP was actually created as an improvement over Bearer tokens used for
+authentication, so its use as a certificate-like assertion may require substantial
+clarification and possibly additional profile work.</t>
+<t>While there is support for token introspection, in general access tokens need
+online verification between resources and the token issuer.</t>
+<t>While JWTs can include list of arbitrary claims, there is no native
+support for multiple subjects in the same JWT. There is a proposal to address
+this limitation with nested JWTs <xref target="I-D.yusef-oauth-nested-jwt"></xref>.</t>
+<figure><name>JOSE header and claims sections of a JWT DPoP proof referring to an IM URI
+</name>
+<artwork>{
+    &quot;typ&quot;: &quot;dpop+jwt&quot;,
+    &quot;alg&quot;: &quot;EdDSA&quot;,
+    &quot;jwk&quot;: {
+         &quot;typ&quot;: &quot;OKP&quot;,
+         &quot;crv&quot;: &quot;Ed25519&quot;,
+         &quot;x&quot;: &quot;9kaYCj...3lnwW&quot;
+    }
+}
+.
+{
+    &quot;jti&quot;: &quot;7535d380-673e-4219-8410-b8df679c306e&quot;,
+    &quot;iat&quot;: 1653455836315,
+    &quot;htm&quot;: &quot;POST&quot;,
+    &quot;htu&quot;: &quot;https://example.com/client/token&quot;,
+    &quot;nonce&quot;: &quot;WE88EvOBzbqGerznM-2P_AadVf7374y0cH19sDSZA2A&quot;,
+    &quot;sub&quot;: &quot;im:SvPfLlwBQi-6oddVRrkqpw/04c7@example.com&quot;,
+    &quot;exp&quot;: 1661231836315
+}
+</artwork>
+</figure>
+</section>
+
+<section anchor="verifiable-credentials"><name>Verifiable Credentials</name>
+<t>Verifiable Credentials (VC) is a framework for exchanging machine-readable
+credentials <xref target="W3C.REC-vc-data-model-20191119"></xref>. The framework is well
+specified and has a very flexbile assertion structure, which
+in addition to or in place of basic names and identifiers, can
+optionally include arbitrary attributes (ex: security clearance, age, nationality)
+up to and including selective disclosure depending on the profile being used.
+For example, a verifiable credential could be used to assert that an IM client
+belongs to a Customer Support agent of Sirius Cybernetic Corp, who speaks
+English and Vogon, and is qualified to give support for their Ident-I-Eeze product,
+without revealing the name of the agent.</t>
+<t>The VC specification describes both Verifiable Credentials and Verifiable Presentations.
+A Verifiable Credential contains assertions made by an issuer. Holders assemble
+credentials into a Verifiable Presentation. Verifiers can validate the Verifiable
+Credentials in the Verifiable Presentation. Specific credential types are defined by
+referencing ontologies. The example at the end of this section uses the
+VCard ontology <xref target="W3C.WD-vcard-rdf-20130924"></xref>.</t>
+<t>Most of the examples for Verifiable Credentials and many of the implementations by commercial identity
+providers use Decentralized Identifiers (DIDs), but there is no requirement to use DID or the associated esoteric cryptography
+in a specific VC profile.  (Indeed the VC profile for COVID-19 for vaccination
+does not use DIDs). The most significant problem with VCs are that
+there is no off-the-shelf mechanism for proof of possession of a private key, and no
+consensus to use VCs for user authentication (as opposed to using VCs to assert identity attributes).</t>
+<t>While the examples in this document are represented as JSON, including whitespace,
+the actual JSON encoding used for VC has no whitespace.</t>
+<t>The first example shows a fragment of the claims in a JWT-based VC proof,
+referencing the VCard ontology.</t>
+<figure><name>fragment of example VC claims using VCard ontology
+</name>
+<artwork>{
+  &quot;sub&quot;: &quot;im:SvPfLlwBQi-6oddVRrkqpw/04c7@example.com&quot;,
+  &quot;jti&quot;: &quot;http://im.example.com/@alice_smith/devices/04c7&quot;,
+  &quot;iss&quot;: &quot;https://im.example.com/keys/issuer.jwk&quot;,
+  &quot;nbf&quot;: 1653455836315,
+  &quot;iat&quot;: 1653455836315,
+  &quot;exp&quot;: 1661231836315,
+  &quot;nonce&quot;: &quot;WE88EvOBzbqGerznM-2P_AadVf7374y0cH19sDSZA2A&quot;,
+  &quot;vc&quot;: {
+    &quot;@context&quot;: [
+      &quot;https://www.w3.org/2018/credentials/v1&quot;,
+      &quot;http://www.w3.org/2006/vcard/ns&quot;
+    ],
+    &quot;type&quot;: [&quot;VerifiableCredential&quot;, &quot;ImDeviceCredential&quot;],
+    &quot;credentialSubject&quot;: {
+      &quot;fn&quot;: &quot;Alice M. Smith&quot;,
+      &quot;hasOrganizationName&quot;: &quot;Example Corp&quot;,
+      &quot;hasOrganizationalUnit&quot;: &quot;Engineering&quot;,
+      &quot;hasInstantMessage&quot;: &quot;im:%40alice_smith@example.com&quot;,
+      &quot;hasInstantMessage&quot;: &quot;im:SvPfLlwBQi-6oddVRrkqpw/04c7@example.com&quot;
+    }
+  }
+}
+</artwork>
+</figure>
+<t>In the next example, there is a Verifiable Presentation (VP) JOSE header
+and claims which contains two embedded VCs for the same holder. The JOSE
+header contains an actual Ed25519 public key. The corresponding key id
+could be expressed using the <tt>kid</tt> type with a
+<tt>urn:ietf:params:oauth:jwk-thumbprint:sha-256:</tt> prefix, the actual fingerprint
+value would be <tt>mJafqNxZWNAIkaDGPlNyhccFSAqnRjhyA3FJNm0f8I8</tt>.</t>
+<t>The first VC contains a full name and a handle-style identifier. It is created
+by one issuer (for example an identity provider), and uses standard claims from
+OpenID Connect Core. The second VC contains a
+client or device identifier and is created by a different issuer (the IM service).</t>
+<t>Note that in the text version of this document, the <tt>jws</tt> values and
+<tt>verification Method</tt> URLs are truncated.</t>
+<figure><name>Example VP with 2 embedded VCs
+</name>
+<artwork>{
+ &quot;typ&quot;: &quot;dpop+jwt&quot;,
+ &quot;alg&quot;: &quot;EdDSA&quot;,
+ &quot;jwk&quot;: {
+  &quot;typ&quot;: &quot;OKP&quot;,
+  &quot;crv&quot;: &quot;Ed25519&quot;,
+  &quot;x&quot;: &quot;6UnHNcJ_iFCkToj9ZabfFgFTI1LPoWo0ZAdv96EyaEw&quot;
+ }
+}
+.
+{
+ &quot;@context&quot;: [
+   &quot;https://www.w3.org/2018/credentials/v1&quot;
+ ],
+ &quot;type&quot;: [
+   &quot;VerifiablePresentation&quot;
+ ],
+ &quot;verifiableCredential&quot;: [
+    {
+     &quot;@context&quot;: [
+       &quot;https://www.w3.org/2018/credentials/v1&quot;,
+       &quot;https://openid.net/2014/openid-connect-core/v1&quot;,
+     ],
+     &quot;id&quot;: &quot;https://idp.example.com/credentials/1872&quot;,
+     &quot;type&quot;: [
+       &quot;VerifiableCredential&quot;,
+       &quot;ImUserIdentityCredential&quot;
+     ],
+     &quot;issuer&quot;: {
+       &quot;id&quot;: &quot;dns:idp.example.com&quot;
+     },
+     &quot;issuanceDate&quot;: &quot;2022-06-19T15:30:16Z&quot;,
+     &quot;credentialSubject&quot;: {
+       &quot;sub&quot;: &quot;im:%40a_smith@example.com&quot;,
+       &quot;name&quot;: &quot;Smith, Alice (Allie)&quot;,
+       &quot;preferred_username&quot;: &quot;@a_smith@example.com&quot;,
+     },
+     &quot;proof&quot;: {
+       &quot;type&quot;: &quot;Ed25519Signature2018&quot;,
+       &quot;created&quot;: &quot;2022-06-19T15:30:15Z&quot;,
+       &quot;jws&quot;: &quot;LedhVWaZvgklWAsPlGU4aEOuxPgXD16-aL5X7RNAyoXRvHPzYAqH8a3..Yot9dpKNuhWim2EwZUk-rmM876Xex_Con_HGseAqR6o&quot;,
+       &quot;proofPurpose&quot;: &quot;assertionMethod&quot;,
+       &quot;verificationMethod&quot;: 
+         &quot;https://idp.example.com/keys/Ed25519/sha256:wF6oONwUJSa3oi8vyBEG8S2CiZANGTN_8ZNXf4RYdyQ&quot;
+     }
+    },
+    {
+     &quot;@context&quot;: [
+       &quot;https://www.w3.org/2018/credentials/v1&quot;,
+       &quot;https://ietf.org/2022/oauth/MlsClientCredential/v1&quot;
+     ],
+     &quot;id&quot;: &quot;https://im.example.com/credentials/9829381&quot;,
+     &quot;type&quot;: [
+       &quot;VerifiableCredential&quot;,
+       &quot;MlsClientIdCredential&quot;
+     ],
+     &quot;issuer&quot;: {
+       &quot;id&quot;: &quot;dns:im.example.com&quot;
+     },
+     &quot;issuanceDate&quot;: &quot;2022-09-08T19:23:24Z&quot;,
+     &quot;credentialSubject&quot;: {
+       &quot;sub&quot;: &quot;im:SvPfLlwBQi-6oddVRrkqpw/04c7@example.com&quot;
+     },
+     &quot;proof&quot;: {
+       &quot;type&quot;: &quot;Ed25519Signature2018&quot;,
+       &quot;created&quot;: &quot;2021-03-19T15:30:15Z&quot;,
+       &quot;jws&quot;: &quot;N8xYGopY8_2wJYuhFX5QMuvMBjzHPJqp06w73UL53BBdhxP9QxtqxTAk..jZrTdfr4kMkCOYhLoFG2L7roGZFmDzVSecfzNwf36lk&quot;,
+       &quot;proofPurpose&quot;: &quot;assertionMethod&quot;,
+       &quot;verificationMethod&quot;: &quot;https://im.example.com/keys/Ed25519/sha256:uZx-Zx68PzlMsd2PgslEWBCF-BDyjMUdVDbZhnCZIls&quot;
+     }
+    }
+ ],
+ &quot;id&quot;: &quot;ebc6f1c2&quot;,
+ &quot;holder&quot;: &quot;im:SvPfLlwBQi-6oddVRrkqpw/04c7@example.com&quot;,
+ &quot;proof&quot;: {
+   &quot;type&quot;: &quot;Ed25519Signature2018&quot;,
+   &quot;created&quot;: &quot;2022-09-22T11:10:04Z&quot;,
+   &quot;challenge&quot;: &quot;Es6R6R4yI66_yw0d4ulfFQ&quot;,
+     &quot;domain&quot;: &quot;im:SvPfLlwBQi-6oddVRrkqpw/04c7@example.com&quot;,
+     &quot;jws&quot;: &quot;eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..UIVpxg5CEOSrQtvpse2svUhgzM3iCZOvcJ-XjwNNd0o&quot;,
+     &quot;proofPurpose&quot;: &quot;authentication&quot;,
+     &quot;verificationMethod&quot;: &quot;urn:ietf:params:oauth:jwk-thumbprint:sha-256:mJafqNxZWNAIkaDGPlNyhccFSAqnRjhyA3FJNm0f8I8&quot;
+ }
+}
+</artwork>
+</figure>
+</section>
+
+<section anchor="other-possible-mechanisms"><name>Other possible mechanisms</name>
+<t>Below are other mechanisms which were not investigated due to a lack of time.</t>
+
+<ul spacing="compact">
+<li>Anonymous credential schemes which can present attributes without the
+long-term identity (ex: travel agent for specific team)</li>
+<li>Zero-knowledge proofs - new work is starting in the IETF to define JSON Web Proofs (JWP), a new format that uses zero knowledge proofs.</li>
+<li>Deniable credentials</li>
+</ul>
+</section>
+</section>
+
+<section anchor="iana-considerations"><name>IANA Considerations</name>
+<t>This document requires no action by IANA.</t>
+</section>
+
+<section anchor="security-considerations"><name>Security Considerations</name>
+<t>TBC.
+(The threat model for interoperable IM systems depends on many subtle details).</t>
+</section>
+
+</middle>
+
+<back>
+<references><name>Normative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.ietf-oauth-dpop.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3862.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5280.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7519.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-w3c/reference.W3C.REC-vc-data-model-20191119.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-w3c/reference.W3C.WD-vcard-rdf-20130924.xml"/>
+</references>
+<references><name>Informative References</name>
+<reference anchor="DoubleRatchet" target="https://signal.org/docs/specifications/doubleratchet/">
+  <front>
+    <title>The Double Ratchet Algorithm</title>
+    <author fullname="Trevor Perrin">
+      <organization>Signal</organization>
+    </author>
+    <author fullname="Moxie Marlinspike">
+      <organization>Signal</organization>
+    </author>
+    <date year="2016" month="November" day="20"></date>
+  </front>
+</reference>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.barnes-mimi-identity-arch.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.hallambaker-mesh-architecture.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.ietf-mls-architecture.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.ietf-mls-protocol.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.mahy-mimi-problem-outline.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml-ids/reference.I-D.yusef-oauth-nested-jwt.xml"/>
+<reference anchor="Matrix1756" target="https://github.com/matrix-org/matrix-doc/blob/master/proposals/1756-cross-signing.md">
+  <front>
+    <title>Cross-signing devices with device signing keys</title>
+    <author fullname="Hubert Chathi">
+      <organization>Element</organization>
+    </author>
+    <date year="2018" month="December" day="13"></date>
+  </front>
+</reference>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6120.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7515.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8392.xml"/>
+<reference anchor="Schaub" target="https://www.youtube.com/watch?v=oc5844dyrsc">
+  <front>
+    <title>Cryptographic Identity: Conquering the Fingerprint Chaos (video)</title>
+    <author fullname="Paul Schaub"></author>
+    <date year="2021" month="April" day="6"></date>
+  </front>
+</reference>
+<reference anchor="X3DH" target="https://signal.org/docs/specifications/x3dh/">
+  <front>
+    <title>The X3DH Key Agreement Protocol</title>
+    <author fullname="Moxie Marlinspike">
+      <organization>Signal</organization>
+    </author>
+    <author fullname="Trevor Perrin">
+      <organization>Signal</organization>
+    </author>
+    <date year="2016" month="November" day="4"></date>
+  </front>
+</reference>
+</references>
+
+<section anchor="acknowledgments"><name>Acknowledgments</name>
+<t>The author wishes to thank Richard Barnes, Tom Leavy, Joel Alwen, Marta Mularczyk,
+Pieter Kasselman, and Rifaat Shekh-Yusef for discussions about this topic.</t>
+</section>
+
+</back>
+
+</rfc>
