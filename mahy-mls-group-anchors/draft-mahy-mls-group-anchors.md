@@ -143,7 +143,7 @@ for identity validation inside the MLS group.
 
 ~~~~~~~~
   Template:
-  Value: 0x0009
+  Value: 0x000A
   Name: group_trust_anchors
   Message(s): This extension may appear in GroupContext objects
   Recommended: Y
@@ -159,16 +159,8 @@ Improper use of the extension in this document could allow the creator of an
 MLS group or the sender of a GroupContextExtensions Proposal to maliciously
 add or remove authorized domains from a group, and to impersonate members from
 specific domains. Therefore it is vital that all clients which implement this
-extension 
-could leak some private information both in KeyPackages and inside an MLS group.
-They could be used to infer a specific implementation, platform, or even version.
-Clients should consider carefully the implications in their environment of
-making a list of acceptable media types available.
+extension validate that changes to their own domain trust anchors conform to their
+domain policies.
 
-A client which can take over group administration could prevent members from
-joining or sending messages in an established group, by requiring a list of
-required media types which the attacker knows is unsupported. This attack is
-not especially helpful, as taking over group administration can have more
-disruptive effects.
 
 {backmatter}
