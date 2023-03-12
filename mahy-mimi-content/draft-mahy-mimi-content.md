@@ -180,16 +180,12 @@ the number of (fractional) seconds since the start of the UNIX epoch
 
 ## Message Behavior Fields 
 
-The semantics of `inReplyTo` {3}, `replaces` {4}, `threadId` {5}, and
-`expires` {6} are described in later sections. The first three can be
-empty, while the `expires` can be zero to indicate no explicit
-expiration time.
-
 The `inReplyTo` {3} data field indicates that the current message is
 a related continuation of the message ID of another message sent
-in the same MLS group. If the field is empty (both the message ID
+in the same MLS group. For all three message behavior fields which
+take a message ID, if the field is empty (i.e. both the message ID
 `localPart` and the `domain` are zero length), the receiver
-assumes that the current message has not identified special
+assumes that the current message has not identified any special
 relationship with another previous message.
 
 The `replaces` {4} data field indicates that the current message
@@ -268,7 +264,7 @@ for example a choice among multiple languages, or between two
 different image formats. The relationship semantics among the parts
 is specified as an enumeration {10}. 
 
-The `nullPart` part semantic is used when there is no body part--for
+The `nullPart` part semantic is used when there is no body part—for
 deleting and unliking. The `singlePart` part semantic is used when
 there is a single body part.
 
@@ -324,7 +320,7 @@ calculated.
 
 ## Derived Data Values
 
-In addition to field which are contained in a MIMI content message,
+In addition to fields which are contained in a MIMI content message,
 there are also two fields which the implementation can definitely derive
 (the MLS group ID {14}, and the leaf index of the sender {15}). Many
 implementations could also determine one or more of: the senders client
@@ -683,13 +679,12 @@ statuses[3].status = expired;
 ## MIMI Required and Recommended media types
 
 As the MIMI Content container is just a container, the plain text or rich
-text messages sent inside, and any image or other formats needs t
-
+text messages sent inside, and any image or other formats needs to be specified.
 Clients compliant with MIMI MUST be able to receive the following media types:
 
-* application/mimi-content -- the MIMI Content container format (described in this document)
+* application/mimi-content — the MIMI Content container format (described in this document)
 * text/plain;charset=utf-8 
-* text/markdown;variant=GFM -- Github Flavored Markdown [@!GFM])
+* text/markdown;variant=GFM — Github Flavored Markdown [@!GFM])
 * message/external-body [@!RFC4483]
 
 Note that it is acceptable to render the contents of a received markdown
@@ -697,9 +692,9 @@ document as plain text.
 
 The following MIME types are RECOMMENDED:
 
-* text/markdown;variant=CommonMark [CommonMark 0.30](https://spec.commonmark.org/0.30))
+* text/markdown;variant=CommonMark [CommonMark](https://spec.commonmark.org/0.30)
 * text/html
-* application/mimi-message-status
+* application/mimi-message-status (described in this document)
 * image/jpeg
 * image/png
 
