@@ -62,8 +62,8 @@ Unfortunately, federation of these IM systems is still rare and interoperability
 the major IM systems in almost non-existent.  It would be incredibly beneficial to
 provide interoperable best practices and solutions which IM vendors can incorporate
 into modern IM systems. Indeed, large customers and governments are already putting
-pressure on these IM vendors. The European Union's Digital Markets Act [DMA] is a
-recent motivating example.
+pressure on these IM vendors. The European Union's Digital Markets Act Article 7 
+[@?DMA] is a recent motivator as well.
 
 Instant Messaging interoperability requirements have changed dramatically since
 the IETF last activity in the space. This document presents an outline of problems
@@ -185,7 +185,7 @@ More documentation on the use of MLS in the Instant Messaging Context:
 
 ## Content negotiation
 
-Protocol independent content negotiation is discussed in [?RFC2703]. In this
+Protocol independent content negotiation is discussed in [@?RFC2703]. In this
 framework, content negotiation covers these elements:
 
 * describing the data resource to be transmitted
@@ -208,7 +208,7 @@ alternative expressions of the same content in a single message.
 
 The requirements for content negotiation are discussed in the MLS architecture
 document [@?I-D.ietf-mls-architecture] and a specific content advertisement
-mechanism for MLS is described in [@?I-D.mahy-mls-content-adv].
+mechanism for MLS is described in [@?I-D.ietf-mls-extensions].
 
 ## Content format interoperability
 
@@ -216,23 +216,23 @@ The expectation of basic or common features in IM systems has grown. Below is a 
 of some features commonly found in most IM group chat systems:
 
 * plain text and rich text messaging
+* mentions
 * delivery notifications
 * read receipts
 * replies
 * reactions
 * edit or delete previously sent messages
 * expiring messages
-* knock / ping
 * shared files/audio/videos
 * calling / conferencing
+* message threading
 
 Once messages are encrypted end-to-end there is no further opportunity for content
 negotiation. 
 Exploring requirements, semantics, and an example common format for messages,
 which would allow proprietary messages or
 extensions to be delivered in parallel to the same users is described in
-[@!I-D.mahy-mimi-content]. It discusses all of the features above except for
-calling and conferencing.
+[@!I-D.mahy-mimi-content]. It discusses all of the features above.
 
 ## Calling and Conferencing
 
@@ -314,3 +314,14 @@ TBC.
     <date month="November" day="4" year="2016"/>
   </front>
 </reference>
+
+<reference anchor="DMA" target="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=CELEX:32022R1925&amp;qid=1678665640191&amp;from=en">
+  <front>
+    <title>REGULATION (EU) 2022/1925 OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL</title>
+    <author>
+      <organization>The European Parliament</organization>
+    </author>
+    <date month="September" day="14" year="2022"/>
+  </front>
+</reference>
+
