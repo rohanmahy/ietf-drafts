@@ -234,6 +234,13 @@ which would allow proprietary messages or
 extensions to be delivered in parallel to the same users is described in
 [@!I-D.mahy-mimi-content]. It discusses all of the features above.
 
+## Transport protocol
+
+The protocol used between two different providers needs to be specified.
+A few different proposals include creating a REST-based protocol
+[@?I-D.rosenberg-mimi-protocol], using XMPP [@?RFC6120], and using a
+variation of the Matrix protocol.
+
 ## Calling and Conferencing
 
 Many IM systems offer 1:1 calling and/or conferencing of real-time audio and
