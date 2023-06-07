@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
-<rfc version="3" ipr="trust200902" docName="draft-mahy-mimi-problem-outline-01" submissionType="IETF" category="info" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" consensus="true">
+<rfc version="3" ipr="trust200902" docName="draft-mahy-mimi-problem-outline-02" submissionType="IETF" category="info" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" consensus="true">
 
 <front>
-<title abbrev="MIMI problem outline">More Instant Messaging Interoperability (MIMI) problem outline</title><seriesInfo value="draft-mahy-mimi-problem-outline-01" stream="IETF" status="informational" name="Internet-Draft"></seriesInfo>
+<title abbrev="MIMI problem outline">More Instant Messaging Interoperability (MIMI) problem outline</title><seriesInfo value="draft-mahy-mimi-problem-outline-02" stream="IETF" status="informational" name="Internet-Draft"></seriesInfo>
 <author initials="R." surname="Mahy" fullname="Rohan Mahy"><organization>Wire</organization><address><postal><street></street>
 </postal><email>rohan.mahy@wire.com</email>
 </address></author><date/>

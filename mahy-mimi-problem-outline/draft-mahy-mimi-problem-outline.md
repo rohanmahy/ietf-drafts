@@ -9,7 +9,7 @@ keyword = ["mimi","immi"]
 [seriesInfo]
 status = "informational"
 name = "Internet-Draft"
-value = "draft-mahy-mimi-problem-outline-01"
+value = "draft-mahy-mimi-problem-outline-02"
 stream = "IETF"
 
 [[author]]
