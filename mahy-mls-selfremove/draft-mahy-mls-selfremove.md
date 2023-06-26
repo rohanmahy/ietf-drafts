@@ -126,7 +126,7 @@ SelfRemove proposals known to the DS to the GroupInfo object.
 
 As with Remove proposals, clients need to be prepared to receive the Commit
 message which removes them from the group via a SelfRemove. If the DS does
-not forward a Commit to a removed client, it needs to provide inform the removed
+not forward a Commit to a removed client, it needs to inform the removed
 client out-of-band.
 
 # IANA Considerations
