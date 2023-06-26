@@ -40,6 +40,12 @@ protocol [@!I-D.ietf-mls-protocol].
 
 # Introduction
 
+RFC EDITOR: PLEASE REMOVE THE FOLLOWING PARAGRAPH. The source for
+this draft is maintained in GitHub. Suggested changes should be
+submitted as pull requests at https://github.com/rohan-wire/ietf-drafts.
+Editorial changes can be managed in GitHub, but any substantive
+change should be discussed on the MLS mailing list (mls@ietf.org).
+
 The design of the MLS protocol prevents a member of
 an MLS group from removing itself immediately from the group. To cause
 an immediate change in the group, a member must send a Commit message.
