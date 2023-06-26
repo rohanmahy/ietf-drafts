@@ -23,8 +23,8 @@ organization = "Wire"
 
 .# Abstract
 
-This document describes the SelfRemove Message Layer Security (MLS) Proposal,
-which improves handling of a client removing itself from an MLS group.
+This document describes the SelfRemove Message Layer Security (MLS) Proposal
+type, which improves handling of a client removing itself from an MLS group.
 
 {mainmatter}
 
@@ -48,9 +48,10 @@ new epoch and therefore needs to be part of the group. Instead a member
 wishing to remove itself can send a Remove Proposal and wait for another
 member to Commit its Proposal. 
 
-Unfortunately, MLS clients which join via an External Commit ignore
+Unfortunately, MLS clients that join via an External Commit ignore
 pending, but otherwise valid, Proposals. The member trying to remove itself has
-to monitor the group and send a new Proposal in the new epoch. In a
+to monitor the group and send a new Proposal in any new epoch until the member is
+removed. In a
 group with a burst of external joiners, a member connected over a
 high-latency link (or one that is merely unlucky) might have to wait
 several epochs to remove itself. A real-world situation in which this happens
@@ -62,11 +63,11 @@ designed to be included in External Commits.
 
 # Extension Description
 
-This document specifies a Proposal MLS extension `SelfRemove`. Its syntax
-is described using the TLS Presentation Language [@!RFC8446]. It is allowed
-in External Commits and requires an UpdatePath. 
+This document specifies a new MLS Proposal type called `SelfRemove`. Its syntax
+is described using the TLS Presentation Language [@!RFC8446] below (its contents
+is an empty struct). It is allowed in External Commits and requires an UpdatePath. 
 
-~~~ tls
+~~~ tls-presentation
 struct {} SelfRemove;
 
 struct {
@@ -86,27 +87,41 @@ struct {
 
 The description of behavior below only applies if all the
 members of a group support this extension in their
-capabilities, a self-remove-capable group. 
+capabilities; such a group is a "self-remove-capable group". 
 
 An MLS client which implements this specification can send a
 SelfRemove Proposal whenever it would like to remove itself
-from a self-remove-capable group. 
+from a self-remove-capable group. Because the point of a
+SelfRemove Proposal is to be available to external joiners
+(which are not yet members), these proposals MUST be sent
+as an MLS PublicMessage. 
 
 Whenever a member receives a SelfRemove Proposal, it includes
 it along with any other pending Propsals when sending a Commit.
 It already MUST send a Commit of pending Proposals before sending
 new application messages.
 
-Whenever a new joiner is about to join a group with an External
-Commit, the new joiner MUST fetch any pending SelfRemove Proposals
-along with the GroupInfo object, and include the SelfRemove Proposals
-in its External Commit by value. The new joiner validates the SelfRemove
-Proposal before including it by value, except that it skips the validation
-of the `membership_tag` because a non-member cannot verify membership.
-
 When a member receives a Commit with an embedded SelfRemove Proposal,
 it treats the proposal like a Remove Proposal, except the leaf node to remove
 is determined by looking in the Sender `leaf_index` of the original Proposal.
+The member is able to verify that the Sender was a member. 
+
+Whenever a new joiner is about to join a self-remove-capable group with an
+External Commit, the new joiner MUST fetch any pending SelfRemove Proposals
+along with the GroupInfo object, and include the SelfRemove Proposals
+in its External Commit by reference. The new joiner validates the SelfRemove
+Proposal before including it by reference, except that it skips the validation
+of the `membership_tag` because a non-member cannot verify membership.
+
+The MLS Distribution Service (DS) needs to validate SelfRemove Proposals it
+receives (except that it cannot validate the `membership_tag`). If the DS
+provides a GroupInfo object to an external joiner, the DS SHOULD attach any
+SelfRemove proposals known to the DS to the GroupInfo object. 
+
+As with Remove proposals, clients need to be prepared to receive the Commit
+message which removes them from the group via a SelfRemove. If the DS does
+not forward a Commit to a removed client, it needs to provide inform the removed
+client out-of-band.
 
 # IANA Considerations
 
