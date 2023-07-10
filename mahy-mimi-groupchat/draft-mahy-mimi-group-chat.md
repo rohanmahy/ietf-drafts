@@ -54,8 +54,9 @@ We assume that each room is owned by one provider at a time. The owning provider
 controls the range of acceptable policies. The user responsible for the room can
 further choose among the acceptable policies. Users on other providers can either
 accept the policies of the room or not. However we want to make it as easy as
-possible for clients from other providers to comply with the room policies without
-making the system too complex.
+possible for clients from other providers to comply with the room policy primitives
+without enumerating specific features or requiring all clients implementations to
+present an identical user experience.
 
 
 # Terminology
@@ -220,19 +221,85 @@ by the horizontal tab character. hashed with SHA-256
 
 im:mimi=%23%233qAm84t9_PGgXoe3d9brqUy5YHgDHp82UysnmCf6zjo@example.com
 
+## MLS terminology
+
+An MLS KeyPackage (KP) is used to establish initial keying material in a group,
+analogous to DoubleRatchet prekeys, except one KP is used for a client per group
+but each recipient does not require a separate one.
+
+An MLS GroupInfo (GI) object is the information needed for a client to join an MLS group
+using an External Commit. It changes with each MLS epoch.
+
 # Basic Operations
+
+The basic lifecycle of a room starts with creating a room and setting its policies and
+operating style. Then additional users need to join. There are several methods of
+joining, but most providers only support a subset of them. Many systems support multiple
+devices or client instances per user. 
+
+In a multi-device context, we expect if the user Alice has 3 stable devices, then
+all three of Alice's clients/devices will be members of the MLS groups for each room
+in which she belongs. If Alice deletes an old client, it should be removed
+from all the MLS groups she belongs to; and if Alice adds a new client, it
+should immediately join all the groups she belongs to. Finally is Alice joins
+or is added to a new multi-device room, all here clients are added near
+simultaneously.
+
+A client that is a member of the MLS group corresponding to a room is an
+"in-room client"
+
+A user that has at least one in-room client is an "occupant" of the room. It can be
+an owner, an admin, or a "regular user" in the room.  A user might also have no
+relationship with a room or it might be an outcast (a user who is banned from a
+room).
+
+Let's use the example of an members-only administered room where Alice is an admin
+and examine the ways in which Bob could end up as a regular user in the room. In
+this context, "the group" refers to the MLS group corresponding to the room.
+
+1) If Alice and Bob already have a consent relationship that Bob's provider is aware of,
+Alice can claim an MLS KeyPackage for each of Bob's clients and add them to the group.
+Bob also becomes a regular user of the room.
+
+2) If Alice and Bob don't have a consent relationship, Alice can request one by
+indicating that user im:%40alice@example.com (Alice) asks user im:%40bob@example.com (Bob)
+to consent to communicating in im:#room35@example.com (a specific room). If Bob
+grants consent, Bob includes a KeyPackage for each of his clients. Bob could grant
+consent to Alice for her to add him to any room or just the specific room requested.
+(Bob can remove his consent at any time.) Alice uses the provided KeyPackages to
+add all Bob's clients to the group.
+
+3) Bob discovers the room and tries to join directly with an external join.
+Bob might discover a public group
+or Bob may have established a new client that needs to join Bob's existing groups.
+An external join requires a GroupInfo object and a
+`ratchet_tree` extension. If Bob is pre-authorized as a future occupant of the group,
+Bob's client can download the GroupInfo from the room's owning provider.
+
+If Bob is not already pre-authorized, Bob can "knock", requesting to be admitted to
+the room. An admin or owner can the decide whether or not to add Bob to the
+pre-authorization list. The admin or owner can send the GroupInfo object directly
+to Bob's client. Bob's client adds itself and any other of Bob's clients.
+
+4) Bob receives a join link.
+
+
+
+So it is important to be clear about what
+it means for a user or a client to be *in* a room. 
+
+
+
+
+
+
+
 
 Create, Join, Send Messages, Remove, Destroy, Change Policies.
 These operations need to be mapped on MLS primitives.
 
 Since some MLS primitives don't map directly, we need policies that respect privacy
 for some sensitive MLS operations like claiming KeyPackages or fetching the GroupInfo.
-
-The basic lifecycle of a room starts with creating a room and setting its policies and
-operating style. Then additional users need to join. There are several methods of
-joining, but most providers only support a subset of them. Many systems support multiple
-devices or client instances per user. So it is important to be clear about what
-it means for a user or a client to be *in* a room. 
 
 
 
@@ -256,10 +323,14 @@ For example allowing a user to be added to a group without prior approval
 - joiner asks to join room (knocks)
 - joiner uses a room link, possibly with a password
 - another user sends a connection request for a 1:1 conversation
-- an existing member of a room invites the new user into the room immediately, and sends MLS Welcome
-- an existing member of a room adds the new user to a list of pre-authorized members. The clients of the new user then add themselves to the corresponding MLS group.
-- an existing member of a room suggests the new user join the room and the corresponding MLS group
-- joiner joins an open room or as a client whose user is already pre-authorized in the room
+- an existing member of a room invites the new user into the room immediately, and
+sends MLS Welcome
+- an existing member of a room adds the new user to a list of pre-authorized members.
+The clients of the new user then add themselves to the corresponding MLS group.
+- an existing member of a room suggests the new user join the room and the
+corresponding MLS group
+- joiner joins an open room or as a client whose user is already pre-authorized
+in the room
 
 
 
@@ -267,7 +338,7 @@ Say Alice is in a room. In what ways can Bob end up in the same room as Alice?
 
 Alice could try to add Bob directly. To do that Alice needs a KeyPackage for
 each of Bob's clients. Depending on the provider and Bob's preferences, and Bob's
-relationship with Alice, the provider might not
+relationship with Alice, the provider might not allow Alice to get a KeyPackage.
 
 Alice adds Bob directly. Alice needs to have the appropriate room permissions, and
 Bob needs to allow Alice to fetch the necessary information (the KeyPackages) to
@@ -275,7 +346,7 @@ add his clients.
 
 
 
-~~~aasvg
+~~~ aasvg
                   .             +------------+
 Alice requests   / \     Yes,   |            |
 Bob's KP        /   \    KP     |            |

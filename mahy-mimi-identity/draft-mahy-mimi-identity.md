@@ -10,7 +10,7 @@ diagram = true
 [seriesInfo]
 status = "informational"
 name = "Internet-Draft"
-value = "draft-mahy-mimi-identity-01"
+value = "draft-mahy-mimi-identity-02"
 stream = "IETF"
 
 [[author]]
