@@ -71,7 +71,8 @@ designed to be included in External Commits.
 
 This document specifies a new MLS Proposal type called `SelfRemove`. Its syntax
 is described using the TLS Presentation Language [@!RFC8446] below (its contents
-is an empty struct). It is allowed in External Commits and requires an UpdatePath. 
+is an empty struct). It is allowed in External Commits and requires an UpdatePath.
+SelfRemove proposals are only allowed in a Commit by reference.  
 
 ~~~ tls-presentation
 struct {} SelfRemove;
@@ -115,9 +116,15 @@ The member is able to verify that the Sender was a member.
 Whenever a new joiner is about to join a self-remove-capable group with an
 External Commit, the new joiner MUST fetch any pending SelfRemove Proposals
 along with the GroupInfo object, and include the SelfRemove Proposals
-in its External Commit by reference. The new joiner validates the SelfRemove
+in its External Commit by reference. (An ExternalCommit can contain zero or
+more SelfRemove proposals). The new joiner validates the SelfRemove
 Proposal before including it by reference, except that it skips the validation
 of the `membership_tag` because a non-member cannot verify membership.
+
+During validation, SelfRemove proposals are processed after Update proposals
+and before Remove proposals. If there is a pending SelfRemove proposal for a specific
+leaf node and a pending Remove proposal for the same leaf node, the Remove proposal is
+invalid. A client MUST NOT issue more than one SelfRemove proposal per epoch.
 
 The MLS Distribution Service (DS) needs to validate SelfRemove Proposals it
 receives (except that it cannot validate the `membership_tag`). If the DS
