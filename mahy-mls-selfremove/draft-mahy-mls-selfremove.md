@@ -72,7 +72,8 @@ designed to be included in External Commits.
 This document specifies a new MLS Proposal type called `SelfRemove`. Its syntax
 is described using the TLS Presentation Language [@!RFC8446] below (its contents
 is an empty struct). It is allowed in External Commits and requires an UpdatePath.
-SelfRemove proposals are only allowed in a Commit by reference.  
+SelfRemove proposals are only allowed in a Commit by reference. SelfRemove
+cannot be sent as an external proposal.
 
 ~~~ tls-presentation
 struct {} SelfRemove;
@@ -153,7 +154,7 @@ from a group more efficiently than using a `remove` proposal type, as the
   Value: 0x0008
   Name: self_remove
   Recommended: Y
-  External: Y
+  External: N
   Path Required: Y
   Reference: RFC XXXX
 ~~~~~~~~
