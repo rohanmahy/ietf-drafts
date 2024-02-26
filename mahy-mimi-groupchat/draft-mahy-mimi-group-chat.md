@@ -411,11 +411,14 @@ to get GI     /   \    GI       |            |
 
 In general bare proposals are authorized like a Commit from the proposer, except as described below.
 
++## Create an MLS group
++
++A user who would be an admin or owner of the room, can create an MLS group
 
 ## commit with Add
 
 ~~~~~
-if the user of the client to be added is a member (affiliation)
+if the user of the client to be added is an occupant of the room
     OR
 if the room is open
     OR
@@ -431,11 +434,11 @@ also check if a logger/bot/system device is present in the room
 ~~~~~
 if the requester represents the same user as the target KeyPackage
     OR
-if the requester is pre-authorized to add the target user to groups
+if the target user consented for the requester to access their KeyPackages (for this specific room or for all rooms)
     OR
 if the requester requests a small number of outstanding KeyPackages at a time as allowed by the target provider's policy
     OR
-the target provided a KeyPackage to the requester (ex: knocked)
+the target explicitly provided a KeyPackage to the requester (ex: knocked)
 ~~~~~
 
 (requester could include the room name/URL in the request so it gets correlated/decremented)
@@ -447,7 +450,7 @@ friend-of-friend, has target address is contact list, etc.
 how to prove to other members your request is legitimate
 
 ~~~~~
-if the joining user is a member (affiliation)
+if the joining user is an occupant of the room
     OR
 if the target room is open
     OR
@@ -468,7 +471,7 @@ almost same as join step above. this is proving to owning provider you are autho
 
 In a flexible-membership room:
 ~~~~~
-user doing the removing is a moderator-role (maybe admin or owner affiliation)
+user doing the removing is an admin or owner of the room
     OR
 Proposal was sent by a member (SelfRemove)
     OR
@@ -482,7 +485,7 @@ In a fixed-membership room:
 MLS is removing clients, so:
 
 ~~~~~
-any regular user can remove any of its other clients
+any occupant can remove any of its other clients
     OR
 the system user of the owning provider can remove any but the last client
     OR
@@ -492,14 +495,14 @@ the system user of another provider can remove any clients of that provider
 can't remove authorized logger / system user
 ~~~~~
 
-## leave a group
+## leave an MLS group
 
 you can always send a proposal to leave, EXCEPT if
 - you are the only admin/owner of a administered group
 - you are the last member of the MLS group
 
 
-## destroy a group
+## destroy an MLS group
 
 only if you are the last member of the MLS group
 
@@ -590,7 +593,8 @@ GET /room/{provider}/{roomId}
 ~~~~~
 "preauthorized": [
     "domain": ["example.net"],
-    "workgroup": ["engineering@example.com", "sales@example.com", "company@provider.net"],
+    "workgroup": ["engineering@example.com", "sales@example.com",
+                  "company@provider.net"],
     "group": [],
     "user": [],
     "system": []
