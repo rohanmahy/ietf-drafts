@@ -73,7 +73,7 @@ ratchet_tree, counting from zero from left to right. For example consider the
 tree in the example below, which has 4 nodes (leaf_index 0 through 3) and 7
 nodes total (node_index 0 through 6).
 
-~~~~~ 
+~~~~~ ascii-art
        Y
      /   \
     /     \
